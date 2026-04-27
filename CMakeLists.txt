@@ -11,23 +11,19 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 find_package(QT NAMES Qt6 Qt5 REQUIRED COMPONENTS Widgets)
 find_package(Qt${QT_VERSION_MAJOR} REQUIRED COMPONENTS Widgets)
-
+include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 set(PROJECT_SOURCES
         main.cpp
-        mainwindow.cpp
-        mainwindow.h
-        mainwindow.ui
-)
+        mainwindow.h mainwindow.cpp mainwindow.ui
+        joindialog.h joindialog.cpp joindialog.ui
+        gamewindow.h gamewindow.cpp gamewindow.ui
+        createdialog.h createdialog.cpp createdialog.ui
+        paintwidget.h paintwidget.cpp paintwidget.ui)
 
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(Crocodile
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
-        mainwindow.h mainwindow.cpp mainwindow.ui
-        joindialog.h joindialog.cpp joindialog.ui
-        gamewindow.h gamewindow.cpp gamewindow.ui
-        createdialog.h createdialog.cpp createdialog.ui
-
     )
 # Define target properties for Android with Qt 6 as:
 #    set_property(TARGET Crocodile APPEND PROPERTY QT_ANDROID_PACKAGE_SOURCE_DIR

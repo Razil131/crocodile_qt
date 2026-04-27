@@ -58,7 +58,7 @@
      <rect>
       <x>310</x>
       <y>90</y>
-      <width>511</width>
+      <width>491</width>
       <height>471</height>
      </rect>
     </property>
@@ -145,9 +145,12 @@ border: 2px solid black;</string>
      </property>
     </widget>
     <widget class="QPushButton" name="StartGameButton">
+     <property name="enabled">
+      <bool>true</bool>
+     </property>
      <property name="geometry">
       <rect>
-       <x>0</x>
+       <x>-20</x>
        <y>0</y>
        <width>511</width>
        <height>471</height>
