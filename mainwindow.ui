@@ -30,7 +30,7 @@
      </font>
     </property>
     <property name="text">
-     <string>Ведущий</string>
+     <string>Сервер</string>
     </property>
    </widget>
    <widget class="QPushButton" name="connectButton">
