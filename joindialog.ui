@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
  <class>JoinDialog</class>
- <widget class="QWidget" name="JoinDialog">
+ <widget class="QDialog" name="JoinDialog">
   <property name="geometry">
    <rect>
     <x>0</x>
@@ -10,8 +10,24 @@
     <height>300</height>
    </rect>
   </property>
+  <property name="minimumSize">
+   <size>
+    <width>400</width>
+    <height>300</height>
+   </size>
+  </property>
+  <property name="maximumSize">
+   <size>
+    <width>400</width>
+    <height>300</height>
+   </size>
+  </property>
   <property name="windowTitle">
    <string>Form</string>
+  </property>
+  <property name="styleSheet">
+   <string notr="true">background-color: #f5f5f5;
+color: black;</string>
   </property>
   <widget class="QLabel" name="IpLabel">
    <property name="geometry">
@@ -48,8 +64,14 @@
      <height>25</height>
     </rect>
    </property>
+   <property name="minimum">
+    <number>1</number>
+   </property>
    <property name="maximum">
-    <number>65536</number>
+    <number>65535</number>
+   </property>
+   <property name="value">
+    <number>8000</number>
    </property>
   </widget>
   <widget class="QLineEdit" name="IPInput4">
@@ -196,5 +218,38 @@
   </widget>
  </widget>
  <resources/>
- <connections/>
+ <connections>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>accepted()</signal>
+   <receiver>JoinDialog</receiver>
+   <slot>accept()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>248</x>
+     <y>254</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>157</x>
+     <y>274</y>
+    </hint>
+   </hints>
+  </connection>
+  <connection>
+   <sender>buttonBox</sender>
+   <signal>rejected()</signal>
+   <receiver>JoinDialog</receiver>
+   <slot>reject()</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>316</x>
+     <y>260</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>286</x>
+     <y>274</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
 </ui>

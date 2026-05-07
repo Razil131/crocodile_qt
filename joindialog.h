@@ -15,6 +15,9 @@ public:
     explicit JoinDialog(QWidget *parent = nullptr);
     ~JoinDialog();
 
+private slots:
+    void on_buttonBox_accepted();
+
 private:
     Ui::JoinDialog *ui;
 };

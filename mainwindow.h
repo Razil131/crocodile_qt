@@ -4,6 +4,7 @@
 #include <QMainWindow>
 #include "createdialog.h"
 #include "joindialog.h"
+#include "gamewindow.h"
 
 namespace Ui {
 class MainWindow;

@@ -12,3 +12,9 @@ JoinDialog::~JoinDialog()
 {
     delete ui;
 }
+
+void JoinDialog::on_buttonBox_accepted()
+{
+
+}
+
