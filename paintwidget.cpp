@@ -1,14 +1,16 @@
 #include "paintwidget.h"
 #include "ui_paintwidget.h"
+#include <QStack>
 
 PaintWidget::PaintWidget(QWidget *parent)
     : QWidget(parent)
     , ui(new Ui::PaintWidget)
 {
     ui->setupUi(this);
-    canvas = QImage(2000, 2000, QImage::Format_RGB32);
+    canvas = QImage(500, 500, QImage::Format_RGB32);
     canvas.fill(Qt::white);
     isDrawing = false;
+    fillMode = false;
 }
 
 PaintWidget::~PaintWidget()
@@ -17,6 +19,13 @@ PaintWidget::~PaintWidget()
 }
 
 void PaintWidget::mousePressEvent(QMouseEvent *event){
+    if(event->button() == Qt::LeftButton && fillMode){
+        QPoint start = event->pos();
+        applyFill(start, currentColor);
+        return;
+    }
+
+
     if(event->button() == Qt::LeftButton || event->button() == Qt::RightButton) {
         qDebug() << "лкм нажата по координатам " << event->pos();
         currentStroke.color = (event->button() == Qt::LeftButton ? currentColor : Qt::white);
@@ -26,15 +35,6 @@ void PaintWidget::mousePressEvent(QMouseEvent *event){
         currentStroke.point_list.append(event->pos());
         drawLineOnCanvas(lastPoint, lastPoint, currentStroke.color, currentStroke.width);
         update();
-    }
-
-    else if(event->button() == Qt::MiddleButton) { //пока этот код тут, потом будет перенесен в отдельную кнопку в ui
-        qDebug() << "нажата скм, все очищено";
-        history.clear();
-        currentStroke.point_list.clear();
-        canvas.fill(Qt::white);
-        update();
-        isDrawing = false;
     }
 }
 
@@ -77,9 +77,43 @@ void PaintWidget::drawStroke(QPainter &p, const Stroke &s){
     }
 }
 
+void PaintWidget::applyFill(QPoint start, QColor fillColor){ //заливка
+    QColor startColor;
+    if(canvas.rect().contains(start)){
+        startColor = canvas.pixelColor(start);}
+    else return;
+    if(startColor == fillColor){return;}
+    QStack<QPoint> stack;
+    stack.push(start);
+
+    while(!stack.isEmpty()){
+        QPoint p = stack.pop();
+        if (!canvas.rect().contains(p)) {
+            continue;
+        }
+        if(canvas.pixelColor(p) == startColor){
+            canvas.setPixelColor(p, fillColor);
+            stack.push(QPoint(p.x() + 1, p.y()));
+            stack.push(QPoint(p.x() - 1, p.y()));
+            stack.push(QPoint(p.x(), p.y() + 1));
+            stack.push(QPoint(p.x(), p.y() - 1));
+        }
+    }
+    update();
+}
+
 void PaintWidget::paintEvent(QPaintEvent *event){ //ивент для рисования
     QPainter painter(this);
     painter.drawImage(0, 0, canvas);
 }
 
+void PaintWidget::clearAll(){
+        qDebug() << " все очищено";
+        history.clear();
+        currentStroke.point_list.clear();
+        canvas.fill(Qt::white);
+        update();
+        isDrawing = false;
+}
 
+//TODO щас заливка работает даже когда игра еще не начата так что исправлять надо потом

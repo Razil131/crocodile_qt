@@ -21,12 +21,15 @@ public:
     void mouseReleaseEvent(QMouseEvent *event) override;
     void setColor(const QColor c){currentColor = c;}
     void setWidth(int w) {currentWidth = w;}
+    void setFillMode(bool b){fillMode = b;}
+    void applyFill(QPoint start, QColor fillColor);
+    void clearAll();
 
 private:
     Ui::PaintWidget *ui;
 
     QColor currentColor = Qt::black;
-    int currentWidth = 10;
+    int currentWidth = 3;
 
     struct Stroke{ //структура для хранения последнего мазка
         QList<QPoint> point_list;
@@ -37,6 +40,7 @@ private:
     QList<Stroke> history;
     QImage canvas;
     bool isDrawing;
+    bool fillMode;
     QPoint lastPoint;
     Stroke currentStroke;
     void paintEvent(QPaintEvent *event) override;
