@@ -19,6 +19,38 @@ std::vector<std::string> GameState::getWordsFromFile(std::string const fileName)
     return words;
 }
 
+std::string GameState::normalize(std::string str) {
+    // trim left
+    str.erase(
+        str.begin(),
+        std::find_if(str.begin(), str.end(),
+            [](unsigned char ch) {
+                return !std::isspace(ch);
+            })
+    );
+
+    // trim right
+    str.erase(
+        std::find_if(str.rbegin(), str.rend(),
+            [](unsigned char ch) {
+                return !std::isspace(ch);
+            }).base(),
+        str.end()
+    );
+
+    // to lowercase
+    std::transform(
+        str.begin(),
+        str.end(),
+        str.begin(),
+        [](unsigned char ch) {
+            return std::tolower(ch);
+        }
+    );
+
+    return str;
+}
+
 void GameState::openRandomLetter(){
     if (countLettersToOpen_ <= 0) return;  
     int numLetters = currentWord_.length() / 2;
@@ -64,14 +96,24 @@ std::string GameState::chooseRandomWord(){
     return words[randomIndex];
 }
 
-bool GameState::isWordCorrect(const std::string word) const{
-    return word == currentWord_;
+void GameState::chooseRandomExplainer(){ //TODO сделать чтобы не мог один и тот же человек 2 раза ведущим в одной игре
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> dis(0, players_.size() - 1);
+
+    int randomIndex = dis(gen);
+    explainer_ = &players_[randomIndex];
+}
+
+bool GameState::isWordCorrect(const std::string word){
+    return normalize(word) == currentWord_;
 }
 
 GameState::GameState() : 
-    currentWord_(chooseRandomWord()),
+    currentWord_(normalize(chooseRandomWord())),
     alreadyOpenedLetters_(0), 
-    roundEndTime_(std::time(nullptr) + ROUND_TIME)
+    roundEndTime_(std::time(nullptr) + ROUND_TIME),
+    explainer_(nullptr)
 {
     int UTF8LettersPerSymbol = 2;
     double letterIntervalCoeff = 5/4.0;
