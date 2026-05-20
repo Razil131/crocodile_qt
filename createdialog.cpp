@@ -12,3 +12,13 @@ CreateDialog::~CreateDialog()
 {
     delete ui;
 }
+
+void CreateDialog::on_buttonBox_accepted()
+{
+    QString nickname = ui->NickInput->text();
+    if(!nickname.isEmpty()){
+        Player* newPlayer = new Player(nickname.toStdString());
+        emit PlayerCreated(newPlayer);
+    }
+}
+

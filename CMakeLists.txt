@@ -20,6 +20,8 @@ set(PROJECT_SOURCES
         createdialog.h createdialog.cpp createdialog.ui
         paintwidget.h paintwidget.cpp paintwidget.ui)
 
+
+
 if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(Crocodile
         MANUAL_FINALIZATION
@@ -58,6 +60,9 @@ set_target_properties(Crocodile PROPERTIES
     MACOSX_BUNDLE TRUE
     WIN32_EXECUTABLE TRUE
 )
+
+target_include_directories(${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/logic/include")
+target_link_libraries(${PROJECT_NAME} PRIVATE "${CMAKE_CURRENT_SOURCE_DIR}/logic/build/libcrocodile_back.dll.a")
 
 include(GNUInstallDirs)
 install(TARGETS Crocodile

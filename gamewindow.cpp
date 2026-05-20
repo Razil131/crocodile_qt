@@ -4,12 +4,18 @@
 #include <QColorDialog>
 #include <QTimer>
 
+
 GameWindow::GameWindow(QWidget *parent)
     : QMainWindow(parent)
-    , ui(new Ui::GameWindow)
+    , ui(new Ui::GameWindow), player("")
 {
     ui->setupUi(this);
+    connect(ui->InputChat, &QLineEdit::returnPressed, this, &GameWindow::on_EnterChat_released);
+    QString ipStr = "IP: " + QString::fromStdString(controller.getIP());
+    ui->IPLabel->setText(ipStr);
     pressTimer = new QTimer(this);
+    gameTimer = new QTimer(this);
+    wordTimer = new QTimer(this);
     pressTimer->setInterval(100);
 
     connect(pressTimer, &QTimer::timeout, this, [=]() {
@@ -18,7 +24,21 @@ GameWindow::GameWindow(QWidget *parent)
         update();
     });
 
+
+    connect(gameTimer, &QTimer::timeout, this, [this]() {
+        ui->TimeLeftLabel->setText( QString::number(controller.getTimeLeft()));
+        ui->TimeLeftLabel->update();
+        ui->TimeLeftBar->setValue(controller.getTimeLeft());
+    });
+
+    connect(wordTimer, &QTimer::timeout, this, [this]() {
+        ui->WordLabel->setText(getWordLabelStr(controller.getOpenedLetters()));
+    });
+
     ui->DesignFrame->installEventFilter(this);
+    ui->WordLabel->hide();
+
+
 }
 
 GameWindow::~GameWindow()
@@ -26,20 +46,22 @@ GameWindow::~GameWindow()
     delete ui;
 }
 
+QString GameWindow::getWordLabelStr(std::vector<std::string> letters){
+    std::string wordLabelStr = "";
+    for(auto l : letters){
+        wordLabelStr += l;
+        wordLabelStr += " ";
+    }
+    QString output = QString::fromStdString(wordLabelStr);
+    return output;
+}
+
 void GameWindow::on_StartGameButton_clicked()
 {
-    ui->StartGameButton->hide();
+    if(controller.isExplainer(&player)){
+        ui->StartGameButton->hide();
+    }
 }
-
-
-void GameWindow::on_Word1Label_clicked()
-{
-    ui->Word1Label->hide();
-    ui->Word2Label->hide();
-    ui->Word3Label->hide();
-    ui->TimeToChooseWordLabel->hide();
-}
-
 
 void GameWindow::on_BrushSizeSlider_valueChanged(int value)
 {
@@ -115,4 +137,59 @@ bool GameWindow::eventFilter(QObject *obj, QEvent *event) {
     }
 
     return QMainWindow::eventFilter(obj, event);
+}
+
+
+void GameWindow::on_EnterChat_released()
+{
+    QString input = ui->InputChat->text();
+    ui->InputChat->clear();
+    qDebug() << "игрок с ником " << player.name() << " отправил сообщение";
+    if(!input.isEmpty()){
+        controller.sendMessage(player, input.toStdString());
+    }
+    chatUpdate();
+}
+
+void GameWindow::chatUpdate(){
+    ui->ChatList->clear();
+    auto chatHistory = controller.getChatHistory();
+    for (auto p : chatHistory){
+        ui->ChatList->addItem(QString("%1:  %2").arg(p.first, p.second));
+    }
+}
+
+void GameWindow::startDraw(){
+    ui->WordLabel->show();
+    ui->Word1Label->hide();
+    ui->Word2Label->hide();
+    ui->Word3Label->hide();
+    ui->TimeToChooseWordLabel->hide();
+    ui->TimeLeftBar->setRange(0, controller.getRoundTime());
+    ui->TimeLeftBar->setValue(controller.getRoundTime());
+    auto word = controller.getOpenedLetters();
+    ui->WordLabel->setText(getWordLabelStr(controller.getOpenedLetters()));
+    gameTimer->start(1000);
+    wordTimer->start(round(controller.getRoundTime()*1000/3));
+}
+
+void GameWindow::on_Word2Label_clicked()
+{
+    startDraw();
+}
+
+
+void GameWindow::on_Word3Label_clicked()
+{
+    startDraw();
+}
+
+void GameWindow::on_Word1Label_clicked()
+{
+    startDraw();
+}
+
+void GameWindow::setPlayer(Player* plr){
+    player = *plr;
+    delete plr;
 }

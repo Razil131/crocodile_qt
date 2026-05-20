@@ -2,6 +2,7 @@
 #define JOINDIALOG_H
 
 #include <QDialog>
+#include "Player.hpp"
 
 namespace Ui {
 class JoinDialog;
@@ -14,6 +15,9 @@ class JoinDialog : public QDialog
 public:
     explicit JoinDialog(QWidget *parent = nullptr);
     ~JoinDialog();
+
+signals:
+    void PlayerCreated(Player* player);
 
 private slots:
     void on_buttonBox_accepted();
