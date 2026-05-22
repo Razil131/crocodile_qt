@@ -15,12 +15,13 @@ class CreateDialog : public QDialog
 public:
     explicit CreateDialog(QWidget *parent = nullptr);
     ~CreateDialog();
+    void accept() override;
 
 signals:
     void PlayerCreated(Player* player);
 
 private slots:
-    void on_buttonBox_accepted();
+
 
 private:
     Ui::CreateDialog *ui;

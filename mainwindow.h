@@ -5,6 +5,7 @@
 #include "createdialog.h"
 #include "joindialog.h"
 #include "gamewindow.h"
+#include "GameController.hpp"
 
 namespace Ui {
 class MainWindow;
@@ -25,6 +26,7 @@ private slots:
 
 private:
     Ui::MainWindow *ui;
+    GameController controller;
 };
 
 #endif // MAINWINDOW_H

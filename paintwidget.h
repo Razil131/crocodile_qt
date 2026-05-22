@@ -24,10 +24,12 @@ public:
     void setFillMode(bool b){fillMode = b;}
     void applyFill(QPoint start, QColor fillColor);
     void clearAll();
+    void setDrawingEnabled(bool enabled) { drawingEnabled = enabled; }
+    bool isDrawingEnabled() const { return drawingEnabled; }
 
 private:
     Ui::PaintWidget *ui;
-
+    bool drawingEnabled;
     QColor currentColor = Qt::black;
     int currentWidth = 3;
 

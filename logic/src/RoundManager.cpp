@@ -10,17 +10,17 @@ void RoundManager::startNewRound(GameState& state){
         return;
     }
     state.setRoundNum(state.RoundNum() + 1);
-
-    bool flag = false;
-    for (const Player ply:state.players()){
-        if (ply.id()==state.explainerID()){
-            flag = true;
-        }
-        if (flag){
-            state.setExplainerID(ply.id());
-            return;
+    state.setRoundEndTime(std::time(nullptr)+state.ROUND_TIME);
+    if (state.RoundNum() != 0){
+        bool flag = false;
+        for (const Player ply:state.players()){
+            if (ply.id()==state.explainerID()){
+                flag = true;
+            }
+            if (flag){
+                state.setExplainerID(ply.id());
+                return;
+            }
         }
     }
-
-    state.setRoundEndTime(std::time_t(nullptr)+state.ROUND_TIME);
 }

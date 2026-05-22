@@ -15,7 +15,7 @@ public:
     GameController();
     void sendMessage(Player& ply, std::string message); // когда игрок пишет сообщение 
     std::vector<std::pair<std::string,std::string>> getChatHistory(); // чтобы отображать историю чата возвращает вектор(<ник,сообщение>, <ник, сообщение>)
-    std::vector<Player> getPlayers(); // чтобы отображать список игроков (посмотри че есть в классе Player)
+    const std::vector<Player>& getPlayers(); // чтобы отображать список игроков (посмотри че есть в классе Player)
     std::time_t getTimeLeft(); // чтобы отображать сколько осталось до конца раунда
     int getRoundTime(); // чтобы прогресс бар можно было настроить (максимальное значение)
     std::vector<std::string> getOpenedLetters(); // чтобы отображать слово снизу возвращает м _ ч в виде вектора строк
@@ -27,5 +27,6 @@ public:
     void setWord(std::string word); // потом отправляешь выбранное слово сюда
     void startRound(); // и начинаешь раунд 
     void updateOpenedLetters(); // это надо вызывать в таймере там же где время обновляется
-    void addPlayer(Player ply); // добавь здесь игроков перед игрой
+    void addPlayer(Player& ply); // добавь здесь игроков перед игрой
+    std::string getWord();
 };

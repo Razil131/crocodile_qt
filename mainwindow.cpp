@@ -16,7 +16,7 @@ MainWindow::~MainWindow()
 void MainWindow::on_createButton_clicked()
 {
     CreateDialog c_dialog(this);
-    GameWindow *g = new GameWindow(this);
+    GameWindow *g = new GameWindow(&controller, this);
     connect(&c_dialog, &CreateDialog::PlayerCreated,
             g, &GameWindow::setPlayer);
     if (c_dialog.exec() == QDialog::Accepted) {
@@ -29,7 +29,7 @@ void MainWindow::on_createButton_clicked()
 void MainWindow::on_connectButton_clicked()
 {
     JoinDialog j_dialog(this);
-    GameWindow *g = new GameWindow(this);
+    GameWindow *g = new GameWindow(&controller,this);
     connect(&j_dialog, &JoinDialog::PlayerCreated,
             g, &GameWindow::setPlayer);
     if (j_dialog.exec() == QDialog::Accepted) {

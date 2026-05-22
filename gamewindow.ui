@@ -149,6 +149,9 @@ color: black;</string>
      </property>
     </widget>
     <widget class="QPushButton" name="StartGameButton">
+     <property name="enabled">
+      <bool>true</bool>
+     </property>
      <property name="geometry">
       <rect>
        <x>-10</x>
@@ -168,6 +171,25 @@ color: black;</string>
       <string>Старт</string>
      </property>
     </widget>
+    <widget class="QPushButton" name="specialFrame">
+     <property name="geometry">
+      <rect>
+       <x>0</x>
+       <y>0</y>
+       <width>511</width>
+       <height>471</height>
+      </rect>
+     </property>
+     <property name="text">
+      <string/>
+     </property>
+    </widget>
+    <zorder>specialFrame</zorder>
+    <zorder>Word1Label</zorder>
+    <zorder>Word2Label</zorder>
+    <zorder>Word3Label</zorder>
+    <zorder>TimeToChooseWordLabel</zorder>
+    <zorder>StartGameButton</zorder>
    </widget>
    <widget class="QListWidget" name="ChatList">
     <property name="geometry">

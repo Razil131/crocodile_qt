@@ -15,12 +15,13 @@ class JoinDialog : public QDialog
 public:
     explicit JoinDialog(QWidget *parent = nullptr);
     ~JoinDialog();
+    void accept() override;
 
 signals:
     void PlayerCreated(Player* player);
 
 private slots:
-    void on_buttonBox_accepted();
+
 
 private:
     Ui::JoinDialog *ui;

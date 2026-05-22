@@ -19,12 +19,13 @@ std::vector<std::pair<std::string,std::string>> GameController::getChatHistory()
     return chat_.messages();
 }
 
-std::vector<Player> GameController::getPlayers(){
+const std::vector<Player>& GameController::getPlayers(){
     return state_.players();
 }
 
 std::time_t GameController::getTimeLeft(){
     std::time_t time_left = state_.roundEndTime()-std::time(nullptr);
+    std::cout << time_left;
     return time_left >= 0 ? time_left : 0;
 }
 
@@ -68,7 +69,11 @@ void GameController::updateOpenedLetters(){
     wordmanager_.updateOpenedLetters(state_);
 }
 
-void GameController::addPlayer(Player ply){
+void GameController::addPlayer(Player& ply){
     state_.addPlayer(ply);
+}
+
+std::string GameController::getWord(){
+    return state_.currentWord();
 }
 

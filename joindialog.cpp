@@ -13,12 +13,18 @@ JoinDialog::~JoinDialog()
     delete ui;
 }
 
-void JoinDialog::on_buttonBox_accepted()
+void JoinDialog::accept()
 {
-    QString nickname = ui->NickInput->text();
-    if(!nickname.isEmpty()){
-        Player* newPlayer = new Player(nickname.toStdString());
-        emit PlayerCreated(newPlayer);
+    QString nickname = ui->NickInput->text().trimmed();
+
+    if (nickname.isEmpty()) {
+        ui->NickInput->setPlaceholderText("Ник не может быть пустым!");
+        return;
     }
+
+    Player* newPlayer = new Player(nickname.toStdString());
+    emit PlayerCreated(newPlayer);
+
+    QDialog::accept();
 }
 

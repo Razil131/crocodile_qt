@@ -11,6 +11,7 @@ PaintWidget::PaintWidget(QWidget *parent)
     canvas.fill(Qt::white);
     isDrawing = false;
     fillMode = false;
+    drawingEnabled = false;
 }
 
 PaintWidget::~PaintWidget()
@@ -19,6 +20,7 @@ PaintWidget::~PaintWidget()
 }
 
 void PaintWidget::mousePressEvent(QMouseEvent *event){
+    if (!drawingEnabled) return;
     if(event->button() == Qt::LeftButton && fillMode){
         QPoint start = event->pos();
         applyFill(start, currentColor);
@@ -51,6 +53,7 @@ void PaintWidget::drawLineOnCanvas(const QPoint &from, const QPoint &to, const Q
 }
 
 void PaintWidget::mouseMoveEvent(QMouseEvent *event){
+    if (!drawingEnabled) return;
     if(isDrawing && (event->buttons() & (Qt::LeftButton | Qt::RightButton))){
         drawLineOnCanvas(lastPoint, event->pos(), currentStroke.color, currentStroke.width);
 
@@ -61,6 +64,7 @@ void PaintWidget::mouseMoveEvent(QMouseEvent *event){
 }
 
 void PaintWidget::mouseReleaseEvent(QMouseEvent *event){
+    if (!drawingEnabled) return;
     if(event->button() == Qt::LeftButton || event->button() == Qt::RightButton) {
         qDebug() << "лкм отпущена по координатам" << event->pos();
         isDrawing = false;

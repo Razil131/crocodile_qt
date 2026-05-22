@@ -2,7 +2,7 @@
 
 
 std::string WordManager::chooseRandomWord(){
-    std::vector<std::string> words = getWordsFromFile("../russian_easy.utf-8");
+    std::vector<std::string> words = getWordsFromFile("../russian.utf-8");
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_int_distribution<> dis(0, words.size() - 1);

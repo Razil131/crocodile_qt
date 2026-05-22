@@ -2,7 +2,7 @@
 
 GameState::GameState() :  
     roundEndTime_(std::time(nullptr) + ROUND_TIME),
-    explainerID_(0),
+    explainerID_(1),
     roundNum_(0),
     roundCount_(0),
     roundInProgress_(false)

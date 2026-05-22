@@ -16,20 +16,25 @@ class GameWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    explicit GameWindow(QWidget *parent = nullptr);
+    explicit GameWindow(GameController* ctrl, QWidget *parent = nullptr);
     ~GameWindow();
     QTimer *pressTimer;
     QTimer *gameTimer;
     QTimer *wordTimer;
+    QTimer *chooseWordTimer;
     int duration = 0;
+    int timeForChooseWord = 0;
     void setPlayer(Player* plr);
-    Player getPlayer(){return player;}
+    Player getPlayer(){return *player;}
 
 private slots:
     void on_StartGameButton_clicked();
 
     void on_Word1Label_clicked();
 
+    void on_Word2Label_clicked();
+
+    void on_Word3Label_clicked();
 
     void on_BrushSizeSlider_valueChanged(int value);
 
@@ -45,26 +50,22 @@ private slots:
 
     void chatUpdate();
 
-    void on_Word2Label_clicked();
-
-    void on_Word3Label_clicked();
+    void showWordsOnButtons();
 
 private:
     Ui::GameWindow *ui;
     PaintWidget *paintWidget;
-    // struct ChatEntry{
-    //     QString sender;
-    //     QString message;
-    // };
     QString getWordLabelStr(std::vector<std::string> letters);
     void startDraw();
-
-    // QList<ChatEntry> chatHistory;
+    void showRound();
 
     QTimer *roundTimer;
     int timeLeft;
-    GameController controller;
-    Player player;
+    GameController* controller;
+    Player* player = nullptr;
+    void playersTableUpdate();
+    void tableCreate();
+
 
 
 
