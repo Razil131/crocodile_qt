@@ -195,26 +195,6 @@ TEST_F(GameControllerTest, OpenedLettersAccessible)
     });
 }
 
-TEST_F(GameControllerTest, UpdateOpenedLettersDoesNotCrash)
-{
-    controller.startRound();
-
-    EXPECT_NO_THROW(controller.updateOpenedLetters());
-}
-
-TEST_F(GameControllerTest, OpenedLettersGrowOverTime)
-{
-    controller.setWord("banana");
-    controller.startRound();
-
-    auto before = controller.getOpenedLetters().size();
-
-    controller.updateOpenedLetters();
-
-    auto after = controller.getOpenedLetters().size();
-
-    EXPECT_GE(after, before);
-}
 
 //
 // EXPLAINER TESTS
@@ -251,17 +231,6 @@ TEST_F(GameControllerTest, SpamMessagesDoNotCrash)
         for (int i = 0; i < 10000; ++i)
         {
             controller.sendMessage(p1, "spam");
-        }
-    });
-}
-
-TEST_F(GameControllerTest, ManyRoundsDoNotCrash)
-{
-    EXPECT_NO_THROW({
-        for (int i = 0; i < 100; ++i)
-        {
-            controller.startRound();
-            controller.updateOpenedLetters();
         }
     });
 }
@@ -316,17 +285,6 @@ TEST_F(GameControllerTest, WordWithUppercase)
     );
 }
 
-TEST_F(GameControllerTest, RepeatedUpdateOpenedLettersSafe)
-{
-    controller.startRound();
-
-    EXPECT_NO_THROW({
-        for (int i = 0; i < 100; ++i)
-        {
-            controller.updateOpenedLetters();
-        }
-    });
-}
 
 //
 // CONSISTENCY TESTS

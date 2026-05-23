@@ -8,5 +8,6 @@
 class RoundManager{
 public:
     void startNewRound(GameState& state);
+    void nextExplainer(GameState& state);
 
 };

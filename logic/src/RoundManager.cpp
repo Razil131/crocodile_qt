@@ -7,20 +7,22 @@ void RoundManager::startNewRound(GameState& state){
         state.setRoundCount(size(state.players()));
     }
     if (state.RoundCount() == state.RoundNum()){
+        state.setRoundInProgress(false);
         return;
     }
     state.setRoundNum(state.RoundNum() + 1);
     state.setRoundEndTime(std::time(nullptr)+state.ROUND_TIME);
-    if (state.RoundNum() != 0){
-        bool flag = false;
-        for (const Player ply:state.players()){
-            if (ply.id()==state.explainerID()){
-                flag = true;
-            }
-            if (flag){
-                state.setExplainerID(ply.id());
-                return;
-            }
+}
+
+void RoundManager::nextExplainer(GameState& state){
+    bool flag = false;
+    for (const Player ply:state.players()){
+        if (ply.id()==state.explainerID()){
+            flag = true;
+        }
+        if (flag){
+            state.setExplainerID(ply.id());
+            return;
         }
     }
 }

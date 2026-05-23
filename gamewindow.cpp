@@ -210,6 +210,9 @@ void GameWindow::startDraw(){
     gameTimer->start(1000);
     wordTimer->start(round(controller->getRoundTime()*1000/3));
     controller->startRound();
+    if (controller->getRound()!=1){
+        controller->nextExplainer();
+    }
 }
 
 void GameWindow::on_Word1Label_clicked()

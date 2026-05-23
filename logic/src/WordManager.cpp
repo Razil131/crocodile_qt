@@ -86,18 +86,20 @@ void WordManager::openRandomLetter(GameState& state){
     state.setCountLettersToOpen(state.countLettersToOpen()-1);
 }
 
-void WordManager::updateOpenedLetters(GameState& state){
+bool WordManager::updateOpenedLetters(GameState& state){
     std::time_t curTime = std::time(nullptr);
     std::time_t roundEndTime = state.roundEndTime();
     const int ROUND_TIME = state.ROUND_TIME;
-    if (curTime >= roundEndTime) return;
+    if (curTime >= roundEndTime) return false;
     std::time_t timePassed = (ROUND_TIME - (roundEndTime - curTime));
     int countLettersToOpenNow = timePassed/state.letterTimeInterval() - state.alreadyOpenedLetters();
     int countLetters = (countLettersToOpenNow > 0 ? countLettersToOpenNow : 0 );
-    state.setAlreadyOpenedLetters(state.alreadyOpenedLetters() + countLettersToOpenNow);
-    for (int i = countLettersToOpenNow; i>0; i--){
+    if (countLetters == 0) return false;
+    state.setAlreadyOpenedLetters(state.alreadyOpenedLetters() + countLetters);
+    for (int i = countLetters; i>0; i--){
         openRandomLetter(state);
     }
+    return true;
 }
 
 void WordManager::setCurrentWord(GameState& state, std::string word, const int ROUND_TIME){

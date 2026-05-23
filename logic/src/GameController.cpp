@@ -5,17 +5,53 @@ GameController::GameController(){
     state_ = GameState();
     wordmanager_ = WordManager();
     roundmanager_ = RoundManager();
+    gameTimer_ = new QTimer(this);
+
+    connect(
+        gameTimer_,
+        &QTimer::timeout,
+        this,
+        &GameController::onGameTick
+    );
+
+    gameTimer_->start(1000);
 }
 
-void GameController::sendMessage(Player& ply, std::string message){
-    if (ply.id() != state_.explainerID()){
+bool GameController::canSendMessage(const Player& ply){
+    if (!isExplainer(ply)){
         if (!ply.isCurrentWordGuessed()){
-            chat_.addMessage(ply,message,state_,wordmanager_);
+            return true;
         }
+    }
+    return false;
+}
+
+void GameController::onGameTick()
+{
+    bool opened = wordmanager_.updateOpenedLetters(state_);
+
+    if (opened)
+        emit openedLettersUpdated();
+
+    auto timeLeft = getTimeLeft();
+
+    emit timerUpdated(timeLeft);
+
+    if (timeLeft <= 0)
+    {
+        emit roundEnded();
+        gameTimer_->stop();
     }
 }
 
-std::vector<std::pair<std::string,std::string>> GameController::getChatHistory(){
+void GameController::sendMessage(Player& ply, std::string message){
+    if (canSendMessage(ply)){
+        chat_.addMessage(ply,message,state_,wordmanager_);
+        emit chatUpdated();
+    }
+}
+
+const std::vector<std::pair<std::string,std::string>>& GameController::getChatHistory(){
     return chat_.messages();
 }
 
@@ -62,18 +98,24 @@ std::tuple<std::string, std::string, std::string> GameController::getWordsForCho
 }
 
 void GameController::startRound(){
+    if (getWord()== ""){return;}
+    if (getTimeLeft() >= 0){return;}
     roundmanager_.startNewRound(state_);
-}
-
-void GameController::updateOpenedLetters(){
-    wordmanager_.updateOpenedLetters(state_);
+    if (!gameTimer_->isActive())
+        gameTimer_->start(1000);
+    emit roundStarted();
 }
 
 void GameController::addPlayer(Player& ply){
     state_.addPlayer(ply);
+    emit playersUpdated();
 }
 
 std::string GameController::getWord(){
     return state_.currentWord();
 }
 
+void GameController::nextExplainer(){
+    roundmanager_.nextExplainer(state_);
+    emit explainerUpdated();
+};

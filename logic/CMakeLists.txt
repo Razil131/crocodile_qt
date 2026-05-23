@@ -1,8 +1,13 @@
-cmake_minimum_required(VERSION 3.10.0)
-project(crocodile_back VERSION 0.1.0 LANGUAGES C CXX)
+cmake_minimum_required(VERSION 3.16)
+
+project(crocodile_back VERSION 0.1.0 LANGUAGES CXX)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+
+set(CMAKE_AUTOMOC ON)
+
+find_package(Qt6 REQUIRED COMPONENTS Core)
 
 set(SOURCE_FILE
     ./src/GameState.cpp
@@ -11,35 +16,46 @@ set(SOURCE_FILE
     ./src/ChatManager.cpp
     ./src/RoundManager.cpp
     ./src/WordManager.cpp
-    )
+
+    ./include/GameController.hpp
+)
 
 include_directories(${CMAKE_SOURCE_DIR}/include)
-
-# add_executable(crocodile_back ${SOURCE_FILE})
 
 add_library(crocodile_back SHARED ${SOURCE_FILE})
 
 set_target_properties(crocodile_back PROPERTIES PREFIX "")
 
-include(FetchContent)
-FetchContent_Declare(
-  googletest
-  URL https://github.com/google/googletest/archive/refs/tags/v1.14.0.zip
+target_link_libraries(crocodile_back
+    PRIVATE
+    Qt6::Core
 )
 
-set(gtest_force_shared_crt ON CACHE BOOL "" FORCE) 
+include(FetchContent)
+
+FetchContent_Declare(
+    googletest
+    URL https://github.com/google/googletest/archive/refs/tags/v1.14.0.zip
+)
+
+set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+
 FetchContent_MakeAvailable(googletest)
 
-add_executable(run_project_tests 
+add_executable(run_project_tests
     ./tests/GameController_test.cpp
 )
 
-target_include_directories(run_project_tests PRIVATE ${CMAKE_SOURCE_DIR}/include)
+target_include_directories(run_project_tests
+    PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+)
 
-target_link_libraries(run_project_tests 
-    PRIVATE 
-    crocodile_back 
+target_link_libraries(run_project_tests
+    PRIVATE
+    crocodile_back
     gtest_main
+    Qt6::Core
 )
 
 enable_testing()

@@ -16,7 +16,7 @@ private:
     void openRandomLetter(GameState& state);
 public:
     std::string chooseRandomWord();
-    void updateOpenedLetters(GameState& state);
+    bool updateOpenedLetters(GameState& state);
     void setCurrentWord(GameState& state, std::string word, const int ROUND_TIME);
     bool isWordCorrect(GameState& state, const std::string word);
 };

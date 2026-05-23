@@ -1,20 +1,34 @@
 #pragma once
+#include <QObject>
+#include <QTimer>
 
 #include "GameState.hpp"
 #include "ChatManager.hpp"
 #include "WordManager.hpp"
 #include "RoundManager.hpp"
 
-class GameController{
+class GameController: public QObject{
+    Q_OBJECT
+signals:
+    void chatUpdated();
+    void playersUpdated();
+    void roundStarted();
+    void roundEnded();
+    void openedLettersUpdated();
+    void timerUpdated(int secondsLeft);
+    void explainerUpdated();
 private:
     GameState state_;
     ChatManager chat_;
     WordManager wordmanager_;
     RoundManager roundmanager_;
+    QTimer* gameTimer_;
+    void onGameTick();
+    bool canSendMessage(const Player& ply);
 public:
     GameController();
     void sendMessage(Player& ply, std::string message); // когда игрок пишет сообщение 
-    std::vector<std::pair<std::string,std::string>> getChatHistory(); // чтобы отображать историю чата возвращает вектор(<ник,сообщение>, <ник, сообщение>)
+    const std::vector<std::pair<std::string,std::string>>& getChatHistory(); // чтобы отображать историю чата возвращает вектор(<ник,сообщение>, <ник, сообщение>)
     const std::vector<Player>& getPlayers(); // чтобы отображать список игроков (посмотри че есть в классе Player)
     std::time_t getTimeLeft(); // чтобы отображать сколько осталось до конца раунда
     int getRoundTime(); // чтобы прогресс бар можно было настроить (максимальное значение)
@@ -26,7 +40,7 @@ public:
     std::tuple<std::string, std::string, std::string> getWordsForChoose(); // при нажатии на кнопку start получаешь и выводишь три слова полученные этой функцией
     void setWord(std::string word); // потом отправляешь выбранное слово сюда
     void startRound(); // и начинаешь раунд 
-    void updateOpenedLetters(); // это надо вызывать в таймере там же где время обновляется
     void addPlayer(Player& ply); // добавь здесь игроков перед игрой
+    void nextExplainer();
     std::string getWord();
 };
