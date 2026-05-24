@@ -1,6 +1,5 @@
 #include "RoundManager.hpp"
 
-
 void RoundManager::startNewRound(GameState& state){
     state.setRoundInProgress(true);
     if (state.RoundNum() == 0){

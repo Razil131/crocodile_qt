@@ -6,6 +6,7 @@ GameController::GameController(){
     wordmanager_ = WordManager();
     roundmanager_ = RoundManager();
     gameTimer_ = new QTimer(this);
+    wordTimer_ = new QTimer(this);
 
     connect(
         gameTimer_,
@@ -14,7 +15,12 @@ GameController::GameController(){
         &GameController::onGameTick
     );
 
-    gameTimer_->start(1000);
+    connect(
+        wordTimer_,
+        &QTimer::timeout,
+        this,
+        &GameController::onWordTimerTick
+    );
 }
 
 bool GameController::canSendMessage(const Player& ply){
@@ -26,23 +32,6 @@ bool GameController::canSendMessage(const Player& ply){
     return false;
 }
 
-void GameController::onGameTick()
-{
-    bool opened = wordmanager_.updateOpenedLetters(state_);
-
-    if (opened)
-        emit openedLettersUpdated();
-
-    auto timeLeft = getTimeLeft();
-
-    emit timerUpdated(timeLeft);
-
-    if (timeLeft <= 0)
-    {
-        emit roundEnded();
-        gameTimer_->stop();
-    }
-}
 
 void GameController::sendMessage(Player& ply, std::string message){
     if (canSendMessage(ply)){
@@ -51,18 +40,12 @@ void GameController::sendMessage(Player& ply, std::string message){
     }
 }
 
-const std::vector<std::pair<std::string,std::string>>& GameController::getChatHistory(){
+const std::vector<std::pair<std::string,std::string>> GameController::getChatHistory(){
     return chat_.messages();
 }
 
 const std::vector<Player>& GameController::getPlayers(){
     return state_.players();
-}
-
-std::time_t GameController::getTimeLeft(){
-    std::time_t time_left = state_.roundEndTime()-std::time(nullptr);
-    std::cout << time_left;
-    return time_left >= 0 ? time_left : 0;
 }
 
 int GameController::getRoundTime(){
@@ -89,33 +72,87 @@ bool GameController::isExplainer(const Player& ply){
     return ply.id() == state_.explainerID();
 }
 
-void GameController::setWord(std::string word){
-    wordmanager_.setCurrentWord(state_, word, state_.ROUND_TIME);
-}
-
-std::tuple<std::string, std::string, std::string> GameController::getWordsForChoose(){
-    return std::make_tuple(wordmanager_.chooseRandomWord(), wordmanager_.chooseRandomWord(), wordmanager_.chooseRandomWord());
-}
-
-void GameController::startRound(){
-    if (getWord()== ""){return;}
-    if (getTimeLeft() >= 0){return;}
-    roundmanager_.startNewRound(state_);
-    if (!gameTimer_->isActive())
-        gameTimer_->start(1000);
-    emit roundStarted();
-}
 
 void GameController::addPlayer(Player& ply){
     state_.addPlayer(ply);
     emit playersUpdated();
 }
 
-std::string GameController::getWord(){
-    return state_.currentWord();
+std::time_t GameController::getTimeLeft(){
+    std::time_t time_left = state_.roundEndTime()-std::time(nullptr);
+    return time_left >= 0 ? time_left : 0;
 }
+
+
 
 void GameController::nextExplainer(){
     roundmanager_.nextExplainer(state_);
     emit explainerUpdated();
 };
+
+void GameController::onGameTick()
+{
+    bool opened = wordmanager_.updateOpenedLetters(state_);
+
+    if (opened)
+        emit openedLettersUpdated();
+
+    auto timeLeft = getTimeLeft();
+
+    emit timerUpdated(timeLeft);
+
+    if (timeLeft <= 0)
+    {
+        emit roundEnded();
+        gameTimer_->stop();
+        nextExplainer();
+
+        QTimer::singleShot(0, this, &GameController::startWordChooseAndRound);
+    }
+}
+
+void GameController::setWord(const std::string& word){
+    if (wordChosen_) return;
+    wordChosen_ = true;
+    state_.setCurrentWord(word);
+    emit wordSelected(word);
+    wordTimer_->stop();
+    roundmanager_.startNewRound(state_);
+    emit roundStarted();
+    if (!gameTimer_->isActive()){
+        gameTimer_->start(1000);
+    }   
+}
+
+std::vector<std::string> GameController::chooseWords(){
+    std::vector<std::string> words;
+    words.clear();
+    for (int i = 0; i<3; i++) // тк на выбор 3 слова
+        words.push_back(wordmanager_.chooseRandomWord());
+    return words;
+}
+
+void GameController::onWordTimerTick()
+{
+    emit wordTimerUpdated(--wordTimeLeft_);
+
+    if (wordTimeLeft_ <= 0){
+        wordTimer_->stop();
+        if (!wordChosen_){
+            setWord(currentWords_[0]);
+        }  
+    }
+}
+
+void GameController::startWordChooseAndRound()
+{
+    emit wordChooseStarted();
+    wordTimeLeft_ = 10;
+    wordChosen_ = false;
+    currentWords_ = chooseWords();
+    emit wordsForChooseReady(currentWords_[0],currentWords_[1],currentWords_[2]);
+    if (!wordTimer_->isActive()){
+        wordTimer_->start(1000);
+    }   
+}
+
