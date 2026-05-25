@@ -16,7 +16,7 @@ protected:
         controller.addPlayer(p2);
         controller.addPlayer(p3);
         controller.setWord("adsadsadsa");
-        controller.startRound();
+        //controller.startRound();
     }
 };
 

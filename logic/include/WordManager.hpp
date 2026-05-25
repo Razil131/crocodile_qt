@@ -6,10 +6,12 @@
 #include <algorithm>
 #include <iostream>
 #include <ctime>
+#include "exportMacro.hpp"
 
 #include "GameState.hpp"
 
-class WordManager{
+
+class CROCODILE_BACK_EXPORT WordManager{
 private:
     std::vector<std::string> getWordsFromFile(std::string path);
     std::string normalize(std::string word);

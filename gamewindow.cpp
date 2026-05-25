@@ -5,6 +5,7 @@
 #include <QTimer>
 
 
+
 GameWindow::GameWindow(GameController* ctrl, QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::GameWindow)
@@ -17,11 +18,21 @@ GameWindow::GameWindow(GameController* ctrl, QWidget *parent)
     ui->IPLabel->setText(ipStr);
 
     pressTimer = new QTimer(this);
-    gameTimer = new QTimer(this);
-    wordTimer = new QTimer(this);
-    chooseWordTimer = new QTimer(this);
-    chooseWordTimer->setInterval(1000);
     pressTimer->setInterval(100);
+
+    connect(controller, &GameController::chatUpdated, this, &GameWindow::chatUpdate); //обновление чата
+    connect(controller, &GameController::playersUpdated, this, &GameWindow::playersTableUpdate); //обновление списка игроков
+    connect(controller, &GameController::wordsForChooseReady, this, &GameWindow::onWordChooseStarted); //выбор слова
+    connect(controller, &GameController::roundStarted, this, &GameWindow::onRoundStarted); //начался раунд
+    connect(controller, &GameController::openedLettersUpdated, this, &GameWindow::onOpenedLettersUpdated); //открываем новую букву
+    connect(controller, &GameController::timerUpdated, this, &GameWindow::onGameTimerUpdated); //обновляем таймер игры
+    connect(controller, &GameController::wordTimerUpdated, this, &GameWindow::onWordTimerUpdated); //обновляем таймер выбора слова
+    connect(controller, &GameController::roundEnded, this, &GameWindow::onRoundEnded); //закончился раунд
+    connect(controller, &GameController::explainerUpdated, this, &GameWindow::onExplainerUpdated); //сменился ведущий
+    connect(ui->Canvas, &PaintWidget::commandGenerated, controller, &GameController::broadcastCommand); //мышь контроллер
+    connect(controller, &GameController::drawCommandReceived, ui->Canvas, &PaintWidget::executeCommand); //для всех окон
+
+
 
     connect(pressTimer, &QTimer::timeout, this, [=]() {
         duration += 100;
@@ -29,35 +40,7 @@ GameWindow::GameWindow(GameController* ctrl, QWidget *parent)
         update();
     });
 
-    connect(chooseWordTimer, &QTimer::timeout, this, [this](){
-        timeForChooseWord += 1000;
-        ui->TimeToChooseWordLabel->setText(QString::number((10000 - timeForChooseWord)/1000));
-    if (timeForChooseWord >= 10000) {
-            chooseWordTimer->stop();
-            std::string word = ui->Word1Label->text().toStdString();
-            controller->setWord(word);
-            startDraw();
-        }
-    });
-
-
-    connect(gameTimer, &QTimer::timeout, this, [this]() {
-        ui->TimeLeftLabel->setText( QString::number(controller->getTimeLeft()));
-        ui->TimeLeftLabel->update();
-        ui->TimeLeftBar->setValue(controller->getTimeLeft());
-        playersTableUpdate();
-        controller->updateOpenedLetters();
-        if(controller->getTimeLeft() <= 0){
-
-        }
-    });
-
-    connect(wordTimer, &QTimer::timeout, this, [this]() {
-        ui->WordLabel->setText(getWordLabelStr(controller->getOpenedLetters()));
-    });
-
     tableCreate();
-    showWordsOnButtons();
 }
 
 GameWindow::~GameWindow()
@@ -74,9 +57,12 @@ QString GameWindow::getWordLabelStr(std::vector<std::string> letters){
             wordLabelStr += " ";
         }
         output = QString::fromStdString(wordLabelStr);
+
+        qDebug() << "DEBUG 1: Отрисовка слова для игрока. Получено букв:" << letters.size() << "Строка:" << output;
     }
     else{
         output = QString::fromStdString(controller->getWord());
+        qDebug() << "DEBUG 2: Отрисовка слова для игрока. Получено букв:" << letters.size() << "Строка:" << output;
     }
     return output;
 }
@@ -85,7 +71,7 @@ void GameWindow::on_StartGameButton_clicked()
 {
     if(controller->isExplainer(*player)){
         ui->StartGameButton->hide();
-        chooseWordTimer->start(1000);
+        controller->startWordChooseAndRound();
     }
 }
 
@@ -194,39 +180,16 @@ void GameWindow::chatUpdate(){
     }
 }
 
-void GameWindow::startDraw(){
-    ui->BrushSizeSlider->setEnabled(controller->isExplainer(*player));
-    ui->Canvas->setDrawingEnabled(controller->isExplainer(*player));
-    ui->specialFrame->hide();
-    ui->WordLabel->show();
-    ui->Word1Label->hide();
-    ui->Word2Label->hide();
-    ui->Word3Label->hide();
-    ui->TimeToChooseWordLabel->hide();
-    ui->TimeLeftBar->setRange(0, controller->getRoundTime());
-    ui->TimeLeftBar->setValue(controller->getRoundTime());
-    auto word = controller->getOpenedLetters();
-    ui->WordLabel->setText(getWordLabelStr(controller->getOpenedLetters()));
-    gameTimer->start(1000);
-    wordTimer->start(round(controller->getRoundTime()*1000/3));
-    controller->startRound();
-    if (controller->getRound()!=1){
-        controller->nextExplainer();
-    }
-}
-
 void GameWindow::on_Word1Label_clicked()
 {
     std::string word = ui->Word1Label->text().toStdString();
     controller->setWord(word);
-    startDraw();
 }
 
 void GameWindow::on_Word2Label_clicked()
 {
     std::string word = ui->Word2Label->text().toStdString();
     controller->setWord(word);
-    startDraw();
 }
 
 
@@ -234,7 +197,6 @@ void GameWindow::on_Word3Label_clicked()
 {
     std::string word = ui->Word3Label->text().toStdString();
     controller->setWord(word);
-    startDraw();
 }
 
 
@@ -299,18 +261,86 @@ void GameWindow::tableCreate(){
     ui->PlayersTable->setColumnWidth(2, 60);
 }
 
-void GameWindow::showWordsOnButtons(){
-    auto words = controller->getWordsForChoose();
-    ui->Word1Label->setText(QString::fromStdString(std::get<0>(words)));
-    ui->Word2Label->setText(QString::fromStdString(std::get<1>(words)));
-    ui->Word3Label->setText(QString::fromStdString(std::get<2>(words)));
-}
 
 void GameWindow::showRound(){
     QString round = "Раунд " + QString::number(controller->getRound()) + "/" + QString::number(controller->getRoundCount());
     ui->RoundNumLabel->setText(round);
 }
 
+void GameWindow::onWordChooseStarted(const std::string& w1, const std::string& w2, const std::string& w3) {
+    ui->StartGameButton->hide();
+    ui->WordLabel->hide();
+    ui->specialFrame->show();
+
+    if (controller->isExplainer(*player)) {
+        ui->Word1Label->setText(QString::fromStdString(w1));
+        ui->Word2Label->setText(QString::fromStdString(w2));
+        ui->Word3Label->setText(QString::fromStdString(w3));
+
+        ui->Word1Label->show();
+        ui->Word2Label->show();
+        ui->Word3Label->show();
+        ui->TimeToChooseWordLabel->show();
+    } else {
+        ui->Word1Label->setText("Ведущий выбирает слово...");
+        ui->Word1Label->show();
+
+        ui->Word2Label->hide();
+        ui->Word3Label->hide();
+        ui->TimeToChooseWordLabel->hide();
+    }
+}
+
+void GameWindow::onRoundStarted() {
+    bool isMeExplainer = controller->isExplainer(*player);
+    if(!isMeExplainer){
+        ui->FillingButton->hide();
+        ui->BrushSizeSlider->hide();
+        ui->BrushSizeLabel->hide();
+        ui->BrushSizeLabel_tip->hide();
+        ui->ChooseColorButton->hide();
+        ui->EraseButton->hide();
+    }
+    ui->BrushSizeSlider->setEnabled(isMeExplainer);
+    ui->Canvas->setDrawingEnabled(isMeExplainer);
+    ui->Word1Label->hide();
+    ui->Word2Label->hide();
+    ui->Word3Label->hide();
+    ui->TimeToChooseWordLabel->hide();
+    ui->specialFrame->hide();
+    ui->WordLabel->show();
+
+    ui->TimeLeftBar->setRange(0, controller->getRoundTime());
+    ui->TimeLeftBar->setValue(controller->getRoundTime());
+
+    ui->WordLabel->setText(getWordLabelStr(controller->getOpenedLetters()));
+    showRound();
+}
+
+void GameWindow::onOpenedLettersUpdated(){
+    ui->WordLabel->setText(getWordLabelStr(controller->getOpenedLetters()));
+}
+
+void GameWindow::onGameTimerUpdated(int timeLeft){
+    ui->TimeLeftLabel->setText(QString::number(timeLeft));
+    ui->TimeLeftBar->setValue(timeLeft);
+}
+
+void GameWindow::onWordTimerUpdated(int timeLeft){
+    ui->TimeToChooseWordLabel->setText(QString::number(timeLeft));
+}
+
+void GameWindow::onRoundEnded() {
+    ui->Canvas->setDrawingEnabled(false);
+    ui->BrushSizeSlider->setEnabled(false);
+    ui->Canvas->clearAll();
+    ui->ChatList->addItem("Система: Раунд окончен! Подсчет очков...");
+    playersTableUpdate();
+}
+
+void GameWindow::onExplainerUpdated(){
+    playersTableUpdate();
+}
 
 //todo
 /*

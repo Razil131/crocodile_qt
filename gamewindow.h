@@ -50,7 +50,19 @@ private slots:
 
     void chatUpdate();
 
-    void showWordsOnButtons();
+    void onWordChooseStarted(const std::string& w1, const std::string& w2, const std::string& w3);
+
+    void onRoundStarted();
+
+    void onOpenedLettersUpdated();
+
+    void onGameTimerUpdated(int timeLeft);
+
+    void onWordTimerUpdated(int timeLeft);
+
+    void onRoundEnded();
+
+    void onExplainerUpdated();
 
 private:
     Ui::GameWindow *ui;

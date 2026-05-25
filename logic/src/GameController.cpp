@@ -1,6 +1,7 @@
 #include "GameController.hpp"
-
+#include <QDebug>
 GameController::GameController(){
+    qDebug() << "!!!!!!!!!!!!!";
     chat_ = ChatManager();
     state_ = GameState();
     wordmanager_ = WordManager();
@@ -114,7 +115,7 @@ void GameController::onGameTick()
 void GameController::setWord(const std::string& word){
     if (wordChosen_) return;
     wordChosen_ = true;
-    state_.setCurrentWord(word);
+    wordmanager_.setCurrentWord(state_,word,getRoundTime());
     emit wordSelected(word);
     wordTimer_->stop();
     roundmanager_.startNewRound(state_);
@@ -156,3 +157,6 @@ void GameController::startWordChooseAndRound()
     }   
 }
 
+std::string GameController::getWord(){
+    return state_.currentWord();
+}

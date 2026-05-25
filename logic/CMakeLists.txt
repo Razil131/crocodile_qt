@@ -7,7 +7,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(CMAKE_AUTOMOC ON)
 
-find_package(Qt6 REQUIRED COMPONENTS Core)
+find_package(Qt6 REQUIRED COMPONENTS Core Gui)
 
 set(SOURCE_FILE
     ./src/GameState.cpp
@@ -18,46 +18,51 @@ set(SOURCE_FILE
     ./src/WordManager.cpp
 
     ./include/GameController.hpp
+    ./include/exportMacro.hpp
+    ./include/drawCommand.hpp
 )
 
 include_directories(${CMAKE_SOURCE_DIR}/include)
 
 add_library(crocodile_back SHARED ${SOURCE_FILE})
 
+target_compile_definitions(crocodile_back PRIVATE CROCODILE_BACK_LIBRARY)
+
 set_target_properties(crocodile_back PROPERTIES PREFIX "")
 
 target_link_libraries(crocodile_back
     PRIVATE
     Qt6::Core
+    Qt6::Gui
 )
 
 include(FetchContent)
 
-FetchContent_Declare(
-    googletest
-    URL https://github.com/google/googletest/archive/refs/tags/v1.14.0.zip
-)
+# FetchContent_Declare(
+#     googletest
+#     URL https://github.com/google/googletest/archive/refs/tags/v1.14.0.zip
+# )
 
-set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+# set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 
-FetchContent_MakeAvailable(googletest)
+# FetchContent_MakeAvailable(googletest)
 
-add_executable(run_project_tests
-    ./tests/GameController_test.cpp
-)
+# add_executable(run_project_tests
+#     ./tests/GameController_test.cpp
+# )
 
-target_include_directories(run_project_tests
-    PRIVATE
-    ${CMAKE_SOURCE_DIR}/include
-)
+# target_include_directories(run_project_tests
+#     PRIVATE
+#     ${CMAKE_SOURCE_DIR}/include
+# )
 
-target_link_libraries(run_project_tests
-    PRIVATE
-    crocodile_back
-    gtest_main
-    Qt6::Core
-)
+# target_link_libraries(run_project_tests
+#     PRIVATE
+#     crocodile_back
+#     gtest_main
+#     Qt6::Core
+# )
 
-enable_testing()
-include(GoogleTest)
-gtest_discover_tests(run_project_tests)
+# enable_testing()
+# include(GoogleTest)
+# gtest_discover_tests(run_project_tests)

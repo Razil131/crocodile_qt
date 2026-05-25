@@ -3,11 +3,12 @@
 #include <string>
 #include <ctime>
 #include <cmath>
+#include "exportMacro.hpp"
 
 class GameState;
 class WordManager;
 
-class Player{
+class CROCODILE_BACK_EXPORT Player{
 private:
     inline static int next_id_ = 1;
     int id_;

@@ -4,6 +4,7 @@
 #include <QWidget>
 #include <QMouseEvent>
 #include <QPainter>
+#include "drawCommand.hpp"
 
 namespace Ui {
 class PaintWidget;
@@ -26,6 +27,7 @@ public:
     void clearAll();
     void setDrawingEnabled(bool enabled) { drawingEnabled = enabled; }
     bool isDrawingEnabled() const { return drawingEnabled; }
+    void executeCommand(DrawCommand cmd);
 
 private:
     Ui::PaintWidget *ui;
@@ -51,6 +53,7 @@ private:
 
 signals:
     void pointAdded(QPoint pos, QColor color, int width);
+    void commandGenerated(DrawCommand cmd);
 
 };
 

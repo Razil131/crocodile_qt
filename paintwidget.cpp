@@ -19,26 +19,26 @@ PaintWidget::~PaintWidget()
     delete ui;
 }
 
-void PaintWidget::mousePressEvent(QMouseEvent *event){
+void PaintWidget::mousePressEvent(QMouseEvent *event) {
     if (!drawingEnabled) return;
     if(event->button() == Qt::LeftButton && fillMode){
-        QPoint start = event->pos();
-        applyFill(start, currentColor);
+        DrawCommand cmd;
+        cmd.type = DrawCommand::Fill;
+        cmd.x = event->pos().x();
+        cmd.y = event->pos().y();
+        cmd.color = currentColor;
+        emit commandGenerated(cmd);
         return;
     }
-
-
-    if(event->button() == Qt::LeftButton || event->button() == Qt::RightButton) {
-        qDebug() << "лкм нажата по координатам " << event->pos();
-        currentStroke.color = (event->button() == Qt::LeftButton ? currentColor : Qt::white);
-        currentStroke.width = currentWidth;
-        lastPoint = event->pos();
-        isDrawing = true;
-        currentStroke.point_list.append(event->pos());
-        drawLineOnCanvas(lastPoint, lastPoint, currentStroke.color, currentStroke.width);
-        update();
-    }
+    DrawCommand cmd;
+    cmd.type = DrawCommand::Start;
+    cmd.x = event->pos().x();
+    cmd.y = event->pos().y();
+    cmd.color = (event->button() == Qt::LeftButton ? currentColor : Qt::white);
+    cmd.width = currentWidth;
+    emit commandGenerated(cmd);
 }
+
 
 void PaintWidget::drawLineOnCanvas(const QPoint &from, const QPoint &to, const QColor &color, int width){
     QPainter imagePainter(&canvas);
@@ -52,25 +52,23 @@ void PaintWidget::drawLineOnCanvas(const QPoint &from, const QPoint &to, const Q
     }
 }
 
-void PaintWidget::mouseMoveEvent(QMouseEvent *event){
-    if (!drawingEnabled) return;
-    if(isDrawing && (event->buttons() & (Qt::LeftButton | Qt::RightButton))){
-        drawLineOnCanvas(lastPoint, event->pos(), currentStroke.color, currentStroke.width);
+void PaintWidget::mouseMoveEvent(QMouseEvent *event) {
+    if (!drawingEnabled || !isDrawing) return;
 
-        lastPoint = event->pos();
-        currentStroke.point_list.append(event->pos());
-        update();
-    }
+    DrawCommand cmd;
+    cmd.type = DrawCommand::Move;
+    cmd.x = event->pos().x();
+    cmd.y = event->pos().y();
+    cmd.color = currentStroke.color;
+    cmd.width = currentStroke.width;
+    emit commandGenerated(cmd);
 }
 
-void PaintWidget::mouseReleaseEvent(QMouseEvent *event){
+void PaintWidget::mouseReleaseEvent(QMouseEvent *event) {
     if (!drawingEnabled) return;
-    if(event->button() == Qt::LeftButton || event->button() == Qt::RightButton) {
-        qDebug() << "лкм отпущена по координатам" << event->pos();
-        isDrawing = false;
-        history.push_back(currentStroke);
-        currentStroke.point_list.clear();
-    }
+    DrawCommand cmd;
+    cmd.type = DrawCommand::End;
+    emit commandGenerated(cmd);
 }
 
 void PaintWidget::drawStroke(QPainter &p, const Stroke &s){
@@ -111,13 +109,50 @@ void PaintWidget::paintEvent(QPaintEvent *event){ //ивент для рисов
     painter.drawImage(0, 0, canvas);
 }
 
-void PaintWidget::clearAll(){
-        qDebug() << " все очищено";
-        history.clear();
-        currentStroke.point_list.clear();
-        canvas.fill(Qt::white);
-        update();
-        isDrawing = false;
+void PaintWidget::clearAll() {
+    DrawCommand cmd;
+    cmd.type = DrawCommand::Clear;
+    emit commandGenerated(cmd);
 }
 
-//TODO щас заливка работает даже когда игра еще не начата так что исправлять надо потом
+void PaintWidget::executeCommand(DrawCommand cmd) {
+    switch (cmd.type) {
+    case DrawCommand::Start:
+        isDrawing = true;
+        lastPoint = QPoint(cmd.x, cmd.y);
+
+        currentStroke.color = cmd.color;
+        currentStroke.width = cmd.width;
+        currentStroke.point_list.clear();
+        currentStroke.point_list.append(lastPoint);
+        drawLineOnCanvas(lastPoint, lastPoint, cmd.color, cmd.width);
+        break;
+
+    case DrawCommand::Move:
+        if (isDrawing) {
+            QPoint newPoint(cmd.x, cmd.y);
+            drawLineOnCanvas(lastPoint, newPoint, cmd.color, cmd.width);
+            lastPoint = newPoint;
+            currentStroke.point_list.append(newPoint);
+        }
+        break;
+
+    case DrawCommand::End:
+        isDrawing = false;
+        history.push_back(currentStroke);
+        currentStroke.point_list.clear();
+        break;
+
+    case DrawCommand::Clear:
+        canvas.fill(Qt::white);
+        history.clear();
+        currentStroke.point_list.clear();
+        isDrawing = false;
+        break;
+
+    case DrawCommand::Fill:
+        applyFill(QPoint(cmd.x, cmd.y), cmd.color);
+        break;
+    }
+    update();
+}

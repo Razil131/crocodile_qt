@@ -3,9 +3,11 @@
 #include <cctype>
 #include <random>
 #include <iostream>
+#include "exportMacro.hpp"
 #include "RoundManager.hpp"
 
-class GameState
+
+class CROCODILE_BACK_EXPORT GameState
 {
 public:
     static const int ROUND_TIME = 60*1; //DEBUG было 60*5

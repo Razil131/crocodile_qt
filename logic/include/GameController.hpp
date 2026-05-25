@@ -1,29 +1,34 @@
 #pragma once
 #include <QObject>
 #include <QTimer>
+#include "exportMacro.hpp"
 
 #include "GameState.hpp"
 #include "ChatManager.hpp"
 #include "WordManager.hpp"
 #include "RoundManager.hpp"
+#include "drawCommand.hpp"
 
-class GameController: public QObject{
+
+
+class CROCODILE_BACK_EXPORT GameController: public QObject{
     Q_OBJECT
 signals:
-    void chatUpdated(); // в чат чет написали
-    void playersUpdated(); // добавился игрок
-    void wordChooseStarted(); // начался выбор слова из трех
-    void roundStarted(); // начался раунд именно рисовать можно
-    void roundEnded(); // раунд закончился
-    void openedLettersUpdated(); // открылась новая буква
-    void timerUpdated(int secondsLeft);
-    void explainerUpdated(); // поменялся ведущий
-    void wordsForChooseReady( // пора выбирать слово
+    void chatUpdated(); // в чат чет написали +
+    void playersUpdated(); // добавился игрок +
+    void wordChooseStarted(); // начался выбор слова из трех (лишний)
+    void roundStarted(); // начался раунд именно рисовать можно +
+    void roundEnded(); // раунд закончился +
+    void openedLettersUpdated(); // открылась новая буква +
+    void timerUpdated(int secondsLeft); //+
+    void explainerUpdated(); // поменялся ведущий +
+    void wordsForChooseReady( // пора выбирать слово +
         const std::string& w1,
         const std::string& w2,
         const std::string& w3);
-    void wordSelected(std::string word); // было выбрано слово
-    void wordTimerUpdated(int secondsLeft);
+    void wordSelected(std::string word); // было выбрано слово (лишний)
+    void wordTimerUpdated(int secondsLeft); //+
+    void drawCommandReceived(DrawCommand cmd);
 
 private:
     GameState state_;
@@ -55,5 +60,14 @@ public:
     void setWord(const std::string& word);
     std::vector<std::string> chooseWords();
     void startWordChooseAndRound();
+    std::string getWord();
+
+public slots:
+    void broadcastCommand(DrawCommand cmd) {
+        emit drawCommandReceived(cmd); 
+    }
 
 };
+ // аргументы переделать в wordmanager.setword
+ // не передается ведущий
+ // не начинается следующий раунд 
