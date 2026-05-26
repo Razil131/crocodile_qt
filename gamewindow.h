@@ -2,8 +2,10 @@
 #define GAMEWINDOW_H
 
 #include <QMainWindow>
-#include "paintwidget.h"
 #include <QTimer>
+#include <QPainter>
+#include <QStyle>
+#include "paintwidget.h"
 #include "GameController.hpp"
 #include "Player.hpp"
 
@@ -18,68 +20,46 @@ class GameWindow : public QMainWindow
 public:
     explicit GameWindow(GameController* ctrl, QWidget *parent = nullptr);
     ~GameWindow();
+
     QTimer *pressTimer;
-    QTimer *gameTimer;
-    QTimer *wordTimer;
-    QTimer *chooseWordTimer;
     int duration = 0;
-    int timeForChooseWord = 0;
-    void setPlayer(Player* plr);
-    Player getPlayer(){return *player;}
+
+    void setPlayer(int assignedId); // Теперь передаем просто назначенный ID
+    int getPlayerID() const { return playerId_; }
 
 private slots:
     void on_StartGameButton_clicked();
-
     void on_Word1Label_clicked();
-
     void on_Word2Label_clicked();
-
     void on_Word3Label_clicked();
-
     void on_BrushSizeSlider_valueChanged(int value);
-
     void on_ChooseColorButton_clicked();
-
-
     void on_FillingButton_clicked(bool checked);
-
     void on_EraseButton_pressed();
-
     void on_EraseButton_released();
     void on_EnterChat_released();
 
     void chatUpdate();
 
-    void onWordChooseStarted(const std::string& w1, const std::string& w2, const std::string& w3);
-
-    void onRoundStarted();
-
-    void onOpenedLettersUpdated();
-
-    void onGameTimerUpdated(int timeLeft);
-
-    void onWordTimerUpdated(int timeLeft);
-
+    // ОБНОВЛЕННЫЕ СЛОТЫ ПОД НОВЫЕ СИГНАЛЫ CONTROLLER-A
+    void onWordChooseStarted(const QString& w1, const QString& w2, const QString& w3);
+    void onRoundStarted(int roundNum, const QString& wordToDraw);
+    void onOpenedLettersUpdated(const std::vector<QString>& openedLetters);
+    void onGameTimerUpdated(std::time_t timeLeft);
+    void onWordTimerUpdated(std::time_t timeLeft);
     void onRoundEnded();
-
-    void onExplainerUpdated();
+    void onExplainerUpdated(int newExplainerId);
+    void onMessageReceived(int senderId, const QString& senderName, const QString& text);
 
 private:
     Ui::GameWindow *ui;
-    PaintWidget *paintWidget;
-    QString getWordLabelStr(std::vector<std::string> letters);
-    void startDraw();
+    QString getWordLabelStr(const std::vector<QString>& letters);
     void showRound();
-
-    QTimer *roundTimer;
-    int timeLeft;
-    GameController* controller;
-    Player* player = nullptr;
     void playersTableUpdate();
     void tableCreate();
 
-
-
+    GameController* controller;
+    int playerId_ = -1;
 
 protected:
     bool eventFilter(QObject *obj, QEvent *event) override;

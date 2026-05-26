@@ -2,7 +2,7 @@
 #define JOINDIALOG_H
 
 #include <QDialog>
-#include "Player.hpp"
+#include <QString>
 
 namespace Ui {
 class JoinDialog;
@@ -18,10 +18,7 @@ public:
     void accept() override;
 
 signals:
-    void PlayerCreated(Player* player);
-
-private slots:
-
+    void nicknameEntered(const QString& nickname);
 
 private:
     Ui::JoinDialog *ui;

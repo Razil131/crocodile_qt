@@ -1,162 +1,88 @@
 #include "GameController.hpp"
 #include <QDebug>
+
 GameController::GameController(){
-    qDebug() << "!!!!!!!!!!!!!";
-    chat_ = ChatManager();
-    state_ = GameState();
-    wordmanager_ = WordManager();
-    roundmanager_ = RoundManager();
-    gameTimer_ = new QTimer(this);
-    wordTimer_ = new QTimer(this);
 
-    connect(
-        gameTimer_,
-        &QTimer::timeout,
-        this,
-        &GameController::onGameTick
-    );
+    chatController_   = new ChatController(state_, wordmanager_);
+    drawController_   = new DrawController();
+    playerController_ = new PlayerController(state_);
+    roundController_  = new RoundController(state_, wordmanager_, roundmanager_);
 
-    connect(
-        wordTimer_,
-        &QTimer::timeout,
-        this,
-        &GameController::onWordTimerTick
-    );
-}
 
-bool GameController::canSendMessage(const Player& ply){
-    if (!isExplainer(ply)){
-        if (!ply.isCurrentWordGuessed()){
-            return true;
+    connect(chatController_, &ChatController::playerGuessedWord, this, [this](int playerId, int scoreBonus) {
+        Player& ply = playerController_->getPlayerById(playerId);
+        
+        int newPlayerScore = ply.score() + scoreBonus; 
+        playerController_->onScoreUpdate(ply.id(), newPlayerScore);
+        
+        Player& explainer = state_.explainer();
+        int newExplainerScore = explainer.score() + scoreBonus;
+        playerController_->onScoreUpdate(explainer.id(), newExplainerScore);
+
+        if (playerController_->areAllGuessed()) {
+            roundController_->stopRoundAndNext();
         }
-    }
-    return false;
+    });
+
+    connect(chatController_, &ChatController::openedLettersMayHaveChanged, 
+            roundController_, &RoundController::onOpenedLettersUpdate);
+
+
+    connect(playerController_, &PlayerController::playerAdded, this, &GameController::playerAdded);
+    connect(playerController_, &PlayerController::playerScoreChanged, this, &GameController::playerScoreChanged);
+    connect(playerController_, &PlayerController::playersUpdated, this, &GameController::playersUpdated);
+
+    connect(chatController_, &ChatController::messageReceived, this, &GameController::messageReceived);
+    connect(chatController_, &ChatController::chatUpdated, this, &GameController::chatUpdated);
+
+    connect(drawController_, &DrawController::drawCommandReceived, this, &GameController::drawCommandReceived);
+    
+    connect(playerController_, &PlayerController::playersUpdated, this, &GameController::playersUpdated);
+    connect(chatController_, &ChatController::playersUpdated, this, &GameController::playersUpdated);
+    connect(roundController_, &RoundController::explainerUpdated, this, &GameController::explainerUpdated);
+    connect(roundController_, &RoundController::wordTimerUpdated, this, &GameController::wordTimerUpdated);
+    connect(roundController_, &RoundController::roundStarted, this, &GameController::roundStarted);
+    connect(roundController_, &RoundController::roundEnded, this, &GameController::roundEnded);
+    connect(roundController_, &RoundController::timerUpdated, this, &GameController::timerUpdated);
+    connect(roundController_, &RoundController::openedLettersUpdated, this, &GameController::openedLettersUpdated);
+    connect(roundController_, &RoundController::wordsForChooseReady, this, &GameController::wordsForChooseReady);
+    connect(roundController_, &RoundController::gameEnded, this, &GameController::gameEnded);
 }
 
-
-void GameController::sendMessage(Player& ply, std::string message){
-    if (canSendMessage(ply)){
-        chat_.addMessage(ply,message,state_,wordmanager_);
-        emit chatUpdated();
-    }
+const std::vector<std::pair<QString, QString>>& GameController::getChatHistory() const {
+    static std::vector<std::pair<QString, QString>> dummy;
+    return dummy; 
 }
 
-const std::vector<std::pair<std::string,std::string>> GameController::getChatHistory(){
-    return chat_.messages();
-}
-
-const std::vector<Player>& GameController::getPlayers(){
+const std::vector<Player>& GameController::getPlayers() {
     return state_.players();
 }
 
-int GameController::getRoundTime(){
+int GameController::getRoundTime() {
     return state_.ROUND_TIME;
 }
 
-std::vector<std::string> GameController::getOpenedLetters(){
+std::vector<QString> GameController::getOpenedLetters() {
     return state_.openedLetters();
 }
 
-std::string GameController::getIP(){
-    return "255.255.255.255:65535"; // TODO
+QString GameController::getIP() {
+    return "255.255.255.255:65535"; // TODO: Сюда можно будет прикрутить реальный адрес QHostAddress
 }
 
-int GameController::getRound(){
+int GameController::getRound() {
     return state_.RoundNum();
 }
 
-int GameController::getRoundCount(){
+int GameController::getRoundCount() {
     return state_.RoundCount();
 }
 
-bool GameController::isExplainer(const Player& ply){
-    return ply.id() == state_.explainerID();
-}
-
-
-void GameController::addPlayer(Player& ply){
-    state_.addPlayer(ply);
-    emit playersUpdated();
-}
-
-std::time_t GameController::getTimeLeft(){
-    std::time_t time_left = state_.roundEndTime()-std::time(nullptr);
-    return time_left >= 0 ? time_left : 0;
-}
-
-
-
-void GameController::nextExplainer(){
-    roundmanager_.nextExplainer(state_);
-    emit explainerUpdated();
-};
-
-void GameController::onGameTick()
-{
-    bool opened = wordmanager_.updateOpenedLetters(state_);
-
-    if (opened)
-        emit openedLettersUpdated();
-
-    auto timeLeft = getTimeLeft();
-
-    emit timerUpdated(timeLeft);
-
-    if (timeLeft <= 0)
-    {
-        emit roundEnded();
-        gameTimer_->stop();
-        nextExplainer();
-
-        QTimer::singleShot(0, this, &GameController::startWordChooseAndRound);
-    }
-}
-
-void GameController::setWord(const std::string& word){
-    if (wordChosen_) return;
-    wordChosen_ = true;
-    wordmanager_.setCurrentWord(state_,word,getRoundTime());
-    emit wordSelected(word);
-    wordTimer_->stop();
-    roundmanager_.startNewRound(state_);
-    emit roundStarted();
-    if (!gameTimer_->isActive()){
-        gameTimer_->start(1000);
-    }   
-}
-
-std::vector<std::string> GameController::chooseWords(){
-    std::vector<std::string> words;
-    words.clear();
-    for (int i = 0; i<3; i++) // тк на выбор 3 слова
-        words.push_back(wordmanager_.chooseRandomWord());
-    return words;
-}
-
-void GameController::onWordTimerTick()
-{
-    emit wordTimerUpdated(--wordTimeLeft_);
-
-    if (wordTimeLeft_ <= 0){
-        wordTimer_->stop();
-        if (!wordChosen_){
-            setWord(currentWords_[0]);
-        }  
-    }
-}
-
-void GameController::startWordChooseAndRound()
-{
-    emit wordChooseStarted();
-    wordTimeLeft_ = 10;
-    wordChosen_ = false;
-    currentWords_ = chooseWords();
-    emit wordsForChooseReady(currentWords_[0],currentWords_[1],currentWords_[2]);
-    if (!wordTimer_->isActive()){
-        wordTimer_->start(1000);
-    }   
-}
-
-std::string GameController::getWord(){
+QString GameController::getWord() {
     return state_.currentWord();
+}
+
+std::time_t GameController::getTimeLeft() {
+    std::time_t time_left = state_.roundEndTime() - std::time(nullptr);
+    return time_left >= 0 ? time_left : 0;
 }

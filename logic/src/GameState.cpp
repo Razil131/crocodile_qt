@@ -17,3 +17,7 @@ Player& GameState::explainer() {
     std::cerr << "There is no player with explainer index";
 }
 
+void GameState::clearAndResizeOpenedLetters(int size) {
+    openedLetters_.clear();
+    openedLetters_.resize(size, "_");
+}

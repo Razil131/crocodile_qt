@@ -1,17 +1,17 @@
 #include "WordManager.hpp"
 
 
-std::string WordManager::chooseRandomWord(){
+QString WordManager::chooseRandomWord(){
     std::vector<std::string> words = getWordsFromFile("../russian.utf-8");
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_int_distribution<> dis(0, words.size() - 1);
 
     int randomIndex = dis(gen);
-    return words[randomIndex];
+    return QString::fromStdString(words[randomIndex]);
 }
 
-std::vector<std::string> WordManager::getWordsFromFile(std::string const fileName){
+std::vector<std::string> WordManager::getWordsFromFile(const std::string& fileName){
     std::ifstream file(fileName);
     if (!file.is_open()) {
         std::cerr << "File didn't opened check the path!" << " " << fileName << std::endl;
@@ -29,40 +29,12 @@ std::vector<std::string> WordManager::getWordsFromFile(std::string const fileNam
     return words;
 }
 
-std::string WordManager::normalize(std::string str) {
-    // trim left
-    str.erase(
-        str.begin(),
-        std::find_if(str.begin(), str.end(),
-            [](unsigned char ch) {
-                return !std::isspace(ch);
-            })
-    );
-
-    // trim right
-    str.erase(
-        std::find_if(str.rbegin(), str.rend(),
-            [](unsigned char ch) {
-                return !std::isspace(ch);
-            }).base(),
-        str.end()
-    );
-
-    // to lowercase
-    std::transform(
-        str.begin(),
-        str.end(),
-        str.begin(),
-        [](unsigned char ch) {
-            return std::tolower(ch);
-        }
-    );
-
-    return str;
+QString WordManager::normalize(const QString& str) {
+    return str.trimmed().toLower();
 }
 
 void WordManager::openRandomLetter(GameState& state){
-    if (state.countLettersToOpen() <= 0) return;  
+    if (state.countLettersToOpen( ) <= 0) return;  
     int numLetters = state.currentWord().length() / 2;
     if (numLetters == 0) return;
 
@@ -79,8 +51,8 @@ void WordManager::openRandomLetter(GameState& state){
 
     while (state.openedLetters()[randomIndex] != "_") randomIndex = dis(gen); 
 
-    std::string letter = state.currentWord().substr(randomIndex * 2, 2);
-    std::vector<std::string> openedLetters_copy = state.openedLetters();
+    QString letter = state.currentWord().mid(randomIndex * 2, 2);
+    std::vector<QString> openedLetters_copy = state.openedLetters();
     openedLetters_copy[randomIndex] = letter;
     state.setOpenedLetters(openedLetters_copy);
     state.setCountLettersToOpen(state.countLettersToOpen()-1);
@@ -109,23 +81,28 @@ bool WordManager::updateOpenedLetters(GameState& state){
     return true;
 }
 
-void WordManager::setCurrentWord(GameState& state, std::string word, const int ROUND_TIME){
+void WordManager::setCurrentWord(GameState& state, const QString& word){
     state.setCurrentWord(normalize(word));
     state.setAlreadyOpenedLetters(0);
-    int UTF8LettersPerSymbol = 2;
-    double letterIntervalCoeff = 5/4.0;
-    int numLetters = state.currentWord().length() / UTF8LettersPerSymbol;
-    int lettersToOpen = std::max(1, (numLetters / UTF8LettersPerSymbol + 1));
+    int numLetters = state.currentWord().length();
+    int lettersToOpen = std::max(1, (numLetters / 2 + 1));
     state.setCountLettersToOpen(lettersToOpen);
-    double interval = (ROUND_TIME * letterIntervalCoeff) / lettersToOpen;
+
+    double letterIntervalCoeff = 5/4.0;
+    double interval = (state.ROUND_TIME * letterIntervalCoeff) / lettersToOpen;
     state.setLetterTimeInterval(std::max(1.0, interval));
 
-    state.openedLetters().clear();
-    for (int i = 0; i < numLetters; ++i) {
-        state.openedLetters().push_back("_");
-    }
+    state.clearAndResizeOpenedLetters(numLetters);
 }
 
-bool WordManager::isWordCorrect(GameState& state, const std::string word){
+bool WordManager::isWordCorrect(GameState& state, const QString& word){
     return normalize(word) == state.currentWord();
+}
+
+std::vector<QString> WordManager::chooseWords(){
+    std::vector<QString> words;
+    words.clear();
+    for (int i = 0; i<3; i++) // тк на выбор 3 слова
+        words.push_back(chooseRandomWord());
+    return words;
 }

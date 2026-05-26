@@ -1,42 +1,38 @@
 #include "gamewindow.h"
 #include "ui_gamewindow.h"
-#include "paintwidget.h"
 #include <QColorDialog>
-#include <QTimer>
-
-
+#include <QDebug>
 
 GameWindow::GameWindow(GameController* ctrl, QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::GameWindow)
-    , player(nullptr)
     , controller(ctrl)
 {
     ui->setupUi(this);
+
     connect(ui->InputChat, &QLineEdit::returnPressed, this, &GameWindow::on_EnterChat_released);
-    QString ipStr = "IP: " + QString::fromStdString(controller->getIP());
-    ui->IPLabel->setText(ipStr);
+
+    ui->IPLabel->setText("IP: " + controller->getIP());
 
     pressTimer = new QTimer(this);
     pressTimer->setInterval(100);
 
-    connect(controller, &GameController::chatUpdated, this, &GameWindow::chatUpdate); //обновление чата
-    connect(controller, &GameController::playersUpdated, this, &GameWindow::playersTableUpdate); //обновление списка игроков
-    connect(controller, &GameController::wordsForChooseReady, this, &GameWindow::onWordChooseStarted); //выбор слова
-    connect(controller, &GameController::roundStarted, this, &GameWindow::onRoundStarted); //начался раунд
-    connect(controller, &GameController::openedLettersUpdated, this, &GameWindow::onOpenedLettersUpdated); //открываем новую букву
-    connect(controller, &GameController::timerUpdated, this, &GameWindow::onGameTimerUpdated); //обновляем таймер игры
-    connect(controller, &GameController::wordTimerUpdated, this, &GameWindow::onWordTimerUpdated); //обновляем таймер выбора слова
-    connect(controller, &GameController::roundEnded, this, &GameWindow::onRoundEnded); //закончился раунд
-    connect(controller, &GameController::explainerUpdated, this, &GameWindow::onExplainerUpdated); //сменился ведущий
-    connect(ui->Canvas, &PaintWidget::commandGenerated, controller, &GameController::broadcastCommand); //мышь контроллер
-    connect(controller, &GameController::drawCommandReceived, ui->Canvas, &PaintWidget::executeCommand); //для всех окон
+    connect(controller, &GameController::chatUpdated, this, &GameWindow::chatUpdate);
+    connect(controller, &GameController::playersUpdated, this, &GameWindow::playersTableUpdate);
+    connect(controller, &GameController::wordsForChooseReady, this, &GameWindow::onWordChooseStarted);
+    connect(controller, &GameController::roundStarted, this, &GameWindow::onRoundStarted);
+    connect(controller, &GameController::openedLettersUpdated, this, &GameWindow::onOpenedLettersUpdated);
+    connect(controller, &GameController::timerUpdated, this, &GameWindow::onGameTimerUpdated);
+    connect(controller, &GameController::wordTimerUpdated, this, &GameWindow::onWordTimerUpdated);
+    connect(controller, &GameController::roundEnded, this, &GameWindow::onRoundEnded);
+    connect(controller, &GameController::explainerUpdated, this, &GameWindow::onExplainerUpdated);
+    connect(controller, &GameController::messageReceived, this, &GameWindow::onMessageReceived);
 
-
+    connect(ui->Canvas, &PaintWidget::commandGenerated, controller->draw(), &DrawController::broadcastCommand);
+    connect(controller, &GameController::drawCommandReceived, ui->Canvas, &PaintWidget::executeCommand);
 
     connect(pressTimer, &QTimer::timeout, this, [=]() {
         duration += 100;
-        qDebug() << "Кнопка зажата уже " << duration << " мс";
         update();
     });
 
@@ -48,30 +44,36 @@ GameWindow::~GameWindow()
     delete ui;
 }
 
-QString GameWindow::getWordLabelStr(std::vector<std::string> letters){
-    QString output;
-    if(!controller->isExplainer(*player)){
-        std::string wordLabelStr = "";
-        for(auto l : letters){
-            wordLabelStr += l;
-            wordLabelStr += " ";
-        }
-        output = QString::fromStdString(wordLabelStr);
+void GameWindow::setPlayer(int assignedId) {
+    playerId_ = assignedId;
+    Player& myPlayer = controller->players()->getPlayerById(playerId_);
 
-        qDebug() << "DEBUG 1: Отрисовка слова для игрока. Получено букв:" << letters.size() << "Строка:" << output;
+    bool isMeExplainer = controller->players()->isExplainer(myPlayer);
+    ui->Canvas->setDrawingEnabled(isMeExplainer);
+    ui->BrushSizeSlider->setEnabled(isMeExplainer);
+
+    playersTableUpdate();
+}
+
+QString GameWindow::getWordLabelStr(const std::vector<QString>& letters) {
+    if (!controller->players()->isExplainerByID(playerId_) &&
+        !controller->players()->getPlayerById(playerId_).isCurrentWordGuessed())
+    {
+        QString wordLabelStr = "";
+        for (const auto& l : letters) {
+            wordLabelStr += l + " ";
+        }
+        return wordLabelStr.trimmed();
     }
-    else{
-        output = QString::fromStdString(controller->getWord());
-        qDebug() << "DEBUG 2: Отрисовка слова для игрока. Получено букв:" << letters.size() << "Строка:" << output;
-    }
-    return output;
+
+    return controller->getWord();
 }
 
 void GameWindow::on_StartGameButton_clicked()
 {
-    if(controller->isExplainer(*player)){
+    if (controller->players()->isExplainerByID(playerId_)) {
         ui->StartGameButton->hide();
-        controller->startWordChooseAndRound();
+        controller->round()->startWordChooseAndRound();
     }
 }
 
@@ -81,29 +83,23 @@ void GameWindow::on_BrushSizeSlider_valueChanged(int value)
     ui->BrushSizeLabel->setText(QString::number(value));
 }
 
-
-
 void GameWindow::on_ChooseColorButton_clicked()
 {
-    if(controller->isExplainer(*player)){
-        QColor selectedColor = QColorDialog::getColor(Qt::black, this, "Выберете цвет");
-        if(selectedColor.isValid()){
+    if (controller->players()->isExplainerByID(playerId_)) {
+        QColor selectedColor = QColorDialog::getColor(Qt::black, this, "Выберите цвет");
+        if (selectedColor.isValid()) {
             ui->Canvas->setColor(selectedColor);
             ui->ChooseColorButton->setStyleSheet(QString("background-color: %1").arg(selectedColor.name()));
-    }
+        }
     }
 }
 
-
 void GameWindow::on_FillingButton_clicked(bool checked)
 {
-    if(controller->isExplainer(*player)){
-        if(checked){
+    if (controller->players()->isExplainerByID(playerId_)) {
+        if (checked) {
             ui->FillingButton->setProperty("state", "active");
-            qDebug() << "режим заливки";
-        }
-        else {
-            qDebug() << "режим рисования";
+        } else {
             ui->FillingButton->setProperty("state", "normal");
         }
         ui->Canvas->setFillMode(checked);
@@ -113,10 +109,9 @@ void GameWindow::on_FillingButton_clicked(bool checked)
     }
 }
 
-
 void GameWindow::on_EraseButton_pressed()
 {
-    if(controller->isExplainer(*player)){
+    if (controller->players()->isExplainerByID(playerId_)) {
         duration = 0;
         pressTimer->start();
     }
@@ -124,14 +119,12 @@ void GameWindow::on_EraseButton_pressed()
 
 void GameWindow::on_EraseButton_released()
 {
-    if(controller->isExplainer(*player)){
+    if (controller->players()->isExplainerByID(playerId_)) {
         pressTimer->stop();
-        if(duration > 1000){
+        if (duration > 1000) {
             ui->Canvas->clearAll();
-            qDebug() << "FFFFFF";
             update();
         }
-
         duration = 0;
         ui->DesignFrame->update();
     }
@@ -142,103 +135,80 @@ bool GameWindow::eventFilter(QObject *obj, QEvent *event) {
         if (duration > 0) {
             QPainter painter(ui->DesignFrame);
             painter.setRenderHint(QPainter::Antialiasing);
-
             QRect btnRect = ui->EraseButton->geometry();
-
             QPen pen(QColor(0, 255, 0), 5);
             pen.setCapStyle(Qt::RoundCap);
             painter.setPen(pen);
 
             int startAngle = 90 * 16;
             int spanAngle = -(duration * (360 * 16) / 1000);
-
             painter.drawArc(btnRect.adjusted(-5, -5, 5, 5), startAngle, spanAngle);
         }
         return false;
     }
-
     return QMainWindow::eventFilter(obj, event);
 }
 
-
 void GameWindow::on_EnterChat_released()
 {
-    QString input = ui->InputChat->text();
+    QString input = ui->InputChat->text().trimmed();
     ui->InputChat->clear();
-    qDebug() << "игрок с ником " << player->name() << " отправил сообщение";
-    if(!input.isEmpty()){
-        controller->sendMessage(*player, input.toStdString());
+
+    if (!input.isEmpty()) {
+        Player& myPlayer = controller->players()->getPlayerById(playerId_);
+        controller->chat()->sendMessage(myPlayer, input);
     }
-    chatUpdate();
 }
 
-void GameWindow::chatUpdate(){
-    ui->ChatList->clear();
-    auto chatHistory = controller->getChatHistory();
-    for (auto p : chatHistory){
-        ui->ChatList->addItem(QString("%1:  %2").arg(p.first, p.second));
-    }
+void GameWindow::chatUpdate() {
+ //
+}
+
+void GameWindow::onMessageReceived(int senderId, const QString& senderName, const QString& text) {
+    ui->ChatList->addItem(QString("%1: %2").arg(senderName, text));
+    ui->ChatList->scrollToBottom();
 }
 
 void GameWindow::on_Word1Label_clicked()
 {
-    std::string word = ui->Word1Label->text().toStdString();
-    controller->setWord(word);
+    controller->round()->setWord(ui->Word1Label->text());
 }
 
 void GameWindow::on_Word2Label_clicked()
 {
-    std::string word = ui->Word2Label->text().toStdString();
-    controller->setWord(word);
+    controller->round()->setWord(ui->Word2Label->text());
 }
-
 
 void GameWindow::on_Word3Label_clicked()
 {
-    std::string word = ui->Word3Label->text().toStdString();
-    controller->setWord(word);
+    controller->round()->setWord(ui->Word3Label->text());
 }
 
-
-void GameWindow::setPlayer(Player* plr){
-    player = plr;
-    controller->addPlayer(*player);
-    qDebug() << player->id();
-    ui->Canvas->setDrawingEnabled(controller->isExplainer(*player));
-    ui->BrushSizeSlider->setEnabled(controller->isExplainer(*player));
-    playersTableUpdate();
-}
-
-void GameWindow::playersTableUpdate(){
+void GameWindow::playersTableUpdate() {
     ui->PlayersTable->setUpdatesEnabled(false);
     ui->PlayersTable->clearContents();
-    std::vector<Player> players = controller->getPlayers();
+
+    const std::vector<Player>& players = controller->getPlayers();
     ui->PlayersTable->setRowCount(players.size());
 
     for (size_t row = 0; row < players.size(); ++row) {
         const auto& player = players[row];
-        QString nick = QString::fromStdString(player.name());
-        ui->PlayersTable->setItem(row, 0, new QTableWidgetItem(nick));
 
-        if(controller->isExplainer(player)){
-        QString status = QString::fromStdString("Рисующий");
+        ui->PlayersTable->setItem(row, 0, new QTableWidgetItem(player.name()));
+
+        QString status = controller->players()->isExplainer(player) ? "Рисующий" : "Игрок";
         ui->PlayersTable->setItem(row, 1, new QTableWidgetItem(status));
-    }
-        else{
-            QString status = QString::fromStdString("Игрок");
-            ui->PlayersTable->setItem(row, 1, new QTableWidgetItem(status));
-        }
-        QString scores = QString::number(player.score());
-        ui->PlayersTable->setItem(row, 2, new QTableWidgetItem(scores));
+
+        ui->PlayersTable->setItem(row, 2, new QTableWidgetItem(QString::number(player.score())));
+
         ui->PlayersTable->item(row, 0)->setTextAlignment(Qt::AlignLeft | Qt::AlignTop);
         ui->PlayersTable->item(row, 1)->setTextAlignment(Qt::AlignHCenter | Qt::AlignTop);
         ui->PlayersTable->item(row, 2)->setTextAlignment(Qt::AlignRight | Qt::AlignTop);
-        qDebug() << player.name();
-        }
+    }
     ui->PlayersTable->setUpdatesEnabled(true);
 }
 
-void GameWindow::tableCreate(){
+void GameWindow::tableCreate() {
     ui->DesignFrame->installEventFilter(this);
     ui->WordLabel->hide();
     ui->PlayersTable->setColumnCount(3);
@@ -261,21 +231,20 @@ void GameWindow::tableCreate(){
     ui->PlayersTable->setColumnWidth(2, 60);
 }
 
-
-void GameWindow::showRound(){
-    QString round = "Раунд " + QString::number(controller->getRound()) + "/" + QString::number(controller->getRoundCount());
+void GameWindow::showRound() {
+    QString round = QString("Раунд %1/%2").arg(QString::number(controller->getRound()), QString::number(controller->getRoundCount()));
     ui->RoundNumLabel->setText(round);
 }
 
-void GameWindow::onWordChooseStarted(const std::string& w1, const std::string& w2, const std::string& w3) {
+void GameWindow::onWordChooseStarted(const QString& w1, const QString& w2, const QString& w3) {
     ui->StartGameButton->hide();
     ui->WordLabel->hide();
     ui->specialFrame->show();
 
-    if (controller->isExplainer(*player)) {
-        ui->Word1Label->setText(QString::fromStdString(w1));
-        ui->Word2Label->setText(QString::fromStdString(w2));
-        ui->Word3Label->setText(QString::fromStdString(w3));
+    if (controller->players()->isExplainerByID(playerId_)) {
+        ui->Word1Label->setText(w1);
+        ui->Word2Label->setText(w2);
+        ui->Word3Label->setText(w3);
 
         ui->Word1Label->show();
         ui->Word2Label->show();
@@ -291,16 +260,25 @@ void GameWindow::onWordChooseStarted(const std::string& w1, const std::string& w
     }
 }
 
-void GameWindow::onRoundStarted() {
-    bool isMeExplainer = controller->isExplainer(*player);
-    if(!isMeExplainer){
+void GameWindow::onRoundStarted(int roundNum, const QString& wordToDraw) {
+
+    bool isMeExplainer = controller->players()->isExplainerByID(playerId_);
+    if (!isMeExplainer) {
         ui->FillingButton->hide();
         ui->BrushSizeSlider->hide();
         ui->BrushSizeLabel->hide();
         ui->BrushSizeLabel_tip->hide();
         ui->ChooseColorButton->hide();
         ui->EraseButton->hide();
+    } else {
+        ui->FillingButton->show();
+        ui->BrushSizeSlider->show();
+        ui->BrushSizeLabel->show();
+        ui->BrushSizeLabel_tip->show();
+        ui->ChooseColorButton->show();
+        ui->EraseButton->show();
     }
+
     ui->BrushSizeSlider->setEnabled(isMeExplainer);
     ui->Canvas->setDrawingEnabled(isMeExplainer);
     ui->Word1Label->hide();
@@ -317,17 +295,18 @@ void GameWindow::onRoundStarted() {
     showRound();
 }
 
-void GameWindow::onOpenedLettersUpdated(){
-    ui->WordLabel->setText(getWordLabelStr(controller->getOpenedLetters()));
+void GameWindow::onOpenedLettersUpdated(const std::vector<QString>& openedLetters) {
+    ui->WordLabel->setText(getWordLabelStr(openedLetters));
 }
 
-void GameWindow::onGameTimerUpdated(int timeLeft){
-    ui->TimeLeftLabel->setText(QString::number(timeLeft));
-    ui->TimeLeftBar->setValue(timeLeft);
+void GameWindow::onGameTimerUpdated(std::time_t timeLeft) {
+    int timeInt = static_cast<int>(timeLeft);
+    ui->TimeLeftLabel->setText(QString::number(timeInt));
+    ui->TimeLeftBar->setValue(timeInt);
 }
 
-void GameWindow::onWordTimerUpdated(int timeLeft){
-    ui->TimeToChooseWordLabel->setText(QString::number(timeLeft));
+void GameWindow::onWordTimerUpdated(std::time_t timeLeft) {
+    ui->TimeToChooseWordLabel->setText(QString::number(static_cast<int>(timeLeft)));
 }
 
 void GameWindow::onRoundEnded() {
@@ -338,18 +317,13 @@ void GameWindow::onRoundEnded() {
     playersTableUpdate();
 }
 
-void GameWindow::onExplainerUpdated(){
+void GameWindow::onExplainerUpdated(int newExplainerId) {
+
+    Player& myPlayer = controller->players()->getPlayerById(playerId_);
+    bool isMeExplainer = controller->players()->isExplainer(myPlayer);
+
+    ui->Canvas->setDrawingEnabled(isMeExplainer);
+    ui->BrushSizeSlider->setEnabled(isMeExplainer);
+
     playersTableUpdate();
 }
-
-//todo
-/*
-Сделать раунд +
-Сделать таймер на выбор слова +
-Статус в таблице +
-Когда на таймере 0, выводить старт, выбор слова (Не могу сделать пока нет функции для передачи ведущего)
-Запретить выбирать слова и рисовать всем кроме ведущего + (вроде с рисованием должно работать)
-Запретить менять цвет, заливку и очищать всем кроме ведущего +
-убрать возможность пустой ник оставлять +
-Добавить слоты чтобы обновлялось само
-*/

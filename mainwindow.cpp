@@ -1,5 +1,8 @@
 #include "mainwindow.h"
 #include "./ui_mainwindow.h"
+#include "createdialog.h"
+#include "joindialog.h"
+#include "gamewindow.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -17,24 +20,34 @@ void MainWindow::on_createButton_clicked()
 {
     CreateDialog c_dialog(this);
     GameWindow *g = new GameWindow(&controller, this);
-    connect(&c_dialog, &CreateDialog::PlayerCreated,
-            g, &GameWindow::setPlayer);
+
+    connect(&c_dialog, &CreateDialog::nicknameEntered, this, [this, g](const QString& nickname) {
+        Player& newPlayer = controller.players()->createAndAddPlayer(nickname);
+        g->setPlayer(newPlayer.id());
+    });
+
     if (c_dialog.exec() == QDialog::Accepted) {
         g->show();
     }
-    else delete g;
+    else {
+        delete g;
+    }
 }
-
 
 void MainWindow::on_connectButton_clicked()
 {
     JoinDialog j_dialog(this);
-    GameWindow *g = new GameWindow(&controller,this);
-    connect(&j_dialog, &JoinDialog::PlayerCreated,
-            g, &GameWindow::setPlayer);
+    GameWindow *g = new GameWindow(&controller, this);
+
+    connect(&j_dialog, &JoinDialog::nicknameEntered, this, [this, g](const QString& nickname) {
+        Player& newPlayer = controller.players()->createAndAddPlayer(nickname);
+        g->setPlayer(newPlayer.id());
+    });
+
     if (j_dialog.exec() == QDialog::Accepted) {
         g->show();
     }
-    else delete g;
+    else {
+        delete g;
+    }
 }
-

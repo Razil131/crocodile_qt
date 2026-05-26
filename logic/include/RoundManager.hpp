@@ -10,5 +10,6 @@ class CROCODILE_BACK_EXPORT RoundManager{
 public:
     void startNewRound(GameState& state);
     void nextExplainer(GameState& state);
+    void restartGame(GameState& state);
 
 };

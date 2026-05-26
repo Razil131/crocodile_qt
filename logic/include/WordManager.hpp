@@ -13,12 +13,14 @@
 
 class CROCODILE_BACK_EXPORT WordManager{
 private:
-    std::vector<std::string> getWordsFromFile(std::string path);
-    std::string normalize(std::string word);
+    std::vector<std::string> getWordsFromFile(const std::string& path);
+    QString normalize(const QString& word);
     void openRandomLetter(GameState& state);
+    QString chooseRandomWord();
+    
 public:
-    std::string chooseRandomWord();
     bool updateOpenedLetters(GameState& state);
-    void setCurrentWord(GameState& state, std::string word, const int ROUND_TIME);
-    bool isWordCorrect(GameState& state, const std::string word);
+    void setCurrentWord(GameState& state,const QString& word);
+    bool isWordCorrect(GameState& state, const QString& word);
+    std::vector<QString> chooseWords();
 };

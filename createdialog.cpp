@@ -22,9 +22,7 @@ void CreateDialog::accept()
         return;
     }
 
-    Player* newPlayer = new Player(nickname.toStdString());
-    emit PlayerCreated(newPlayer);
+    emit nicknameEntered(nickname);
 
     QDialog::accept();
 }
-

@@ -16,10 +16,18 @@ set(SOURCE_FILE
     ./src/ChatManager.cpp
     ./src/RoundManager.cpp
     ./src/WordManager.cpp
+    ./src/RoundController.cpp
+    ./src/ChatController.cpp
+    ./src/DrawController.cpp
+    ./src/PlayerController.cpp
 
+    ./include/DrawController.hpp
     ./include/GameController.hpp
     ./include/exportMacro.hpp
     ./include/drawCommand.hpp
+    ./include/RoundController.hpp
+    ./include/ChatController.hpp
+    ./include/PlayerController.hpp
 )
 
 include_directories(${CMAKE_SOURCE_DIR}/include)

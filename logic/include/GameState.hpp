@@ -3,6 +3,7 @@
 #include <cctype>
 #include <random>
 #include <iostream>
+#include <QObject>
 #include "exportMacro.hpp"
 #include "RoundManager.hpp"
 
@@ -19,8 +20,8 @@ private:
     int roundNum_;
     int roundCount_;
     bool roundInProgress_;
-    std::string currentWord_;
-    std::vector<std::string> openedLetters_;
+    QString currentWord_;
+    std::vector<QString> openedLetters_;
     int alreadyOpenedLetters_;
     int countLettersToOpen_;
     int letterTimeInterval_;
@@ -31,7 +32,8 @@ public:
     ~GameState(){}
 
     std::time_t roundEndTime() const {return roundEndTime_;}
-    const std::vector<Player>& players() const { return players_; }
+    const std::vector<Player>& players() { return players_; }
+    std::vector<Player>& mutablePlayers() { return players_; }
     void addPlayer(const Player& ply) { players_.push_back(ply); }
 
     int explainerID() const { return explainerID_; }
@@ -48,9 +50,6 @@ public:
 
     void setRoundEndTime(const std::time_t &roundEndTime) { roundEndTime_ = roundEndTime; }
 
-    
-    
-
     int letterTimeInterval() const { return letterTimeInterval_; }
     void setLetterTimeInterval(int letterTimeInterval) { letterTimeInterval_ = letterTimeInterval; }
 
@@ -60,10 +59,11 @@ public:
     int alreadyOpenedLetters() const { return alreadyOpenedLetters_; }
     void setAlreadyOpenedLetters(int alreadyOpenedLetters) { alreadyOpenedLetters_ = alreadyOpenedLetters; }
 
-    std::vector<std::string>& openedLetters() { return openedLetters_; }
-    void setOpenedLetters(const std::vector<std::string> &openedLetters) { openedLetters_ = openedLetters; }
+    const std::vector<QString>& openedLetters() const { return openedLetters_; }
+    void setOpenedLetters(const std::vector<QString> &openedLetters) { openedLetters_ = openedLetters; }
 
-    std::string currentWord() const { return currentWord_; }
-    void setCurrentWord(const std::string &currentWord) { currentWord_ = currentWord; }
+    const QString currentWord() const { return currentWord_; }
+    void setCurrentWord(const QString &currentWord) { currentWord_ = currentWord; }
 
+    void clearAndResizeOpenedLetters(int size);
 };

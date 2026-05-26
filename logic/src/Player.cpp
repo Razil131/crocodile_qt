@@ -2,13 +2,11 @@
 #include "GameState.hpp"
 #include "WordManager.hpp"
 
-Player::Player(std::string name): name_(name){
-    id_=next_id_;
-    next_id_++;
-    score_ = 0;
-    guessedCount_ = 0;
-    isCurrentWordGuessed_ = false;
-}
+Player::Player(int id, const QString& name): id_(id)
+    , name_(name)
+    , score_(0)
+    , guessedCount_(0)
+    , isCurrentWordGuessed_(false){}
 
 void Player::addScore(const int score){
     score_ += score;
