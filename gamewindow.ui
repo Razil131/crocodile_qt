@@ -630,7 +630,7 @@ QProgressBar::chunk {
       <rect>
        <x>70</x>
        <y>30</y>
-       <width>81</width>
+       <width>131</width>
        <height>51</height>
       </rect>
      </property>

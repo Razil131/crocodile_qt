@@ -2,6 +2,7 @@
 
 #include <string>
 #include <ctime>
+#include <compare>
 #include <cmath>
 #include <QObject>
 #include "exportMacro.hpp"

@@ -24,7 +24,7 @@ public:
     QTimer *pressTimer;
     int duration = 0;
 
-    void setPlayer(int assignedId); // Теперь передаем просто назначенный ID
+    void setPlayer(int assignedId); // теперь передаем просто назначенный ID
     int getPlayerID() const { return playerId_; }
 
 private slots:
@@ -41,7 +41,6 @@ private slots:
 
     void chatUpdate();
 
-    // ОБНОВЛЕННЫЕ СЛОТЫ ПОД НОВЫЕ СИГНАЛЫ CONTROLLER-A
     void onWordChooseStarted(const QString& w1, const QString& w2, const QString& w3);
     void onRoundStarted(int roundNum, const QString& wordToDraw);
     void onOpenedLettersUpdated(const std::vector<QString>& openedLetters);

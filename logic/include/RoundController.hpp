@@ -4,6 +4,7 @@
 #include <QTimer>
 #include <vector>
 #include <string>
+#include <QDebug>
 
 #include "WordManager.hpp"
 #include "RoundManager.hpp"

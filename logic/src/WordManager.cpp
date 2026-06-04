@@ -8,6 +8,7 @@ QString WordManager::chooseRandomWord(){
     std::uniform_int_distribution<> dis(0, words.size() - 1);
 
     int randomIndex = dis(gen);
+    if (words.empty()) return "крокодил";
     return QString::fromStdString(words[randomIndex]);
 }
 
@@ -35,7 +36,7 @@ QString WordManager::normalize(const QString& str) {
 
 void WordManager::openRandomLetter(GameState& state){
     if (state.countLettersToOpen( ) <= 0) return;  
-    int numLetters = state.currentWord().length() / 2;
+    int numLetters = state.currentWord().length();
     if (numLetters == 0) return;
 
     bool hasClosed = false;
@@ -48,10 +49,14 @@ void WordManager::openRandomLetter(GameState& state){
 
     int randomIndex = dis(gen);
     
+    int attempts = 0;
+    while (state.openedLetters()[randomIndex] != "_" and attempts < 100){
+        randomIndex = dis(gen);
+        attempts++;
+    } 
+    if (state.openedLetters()[randomIndex] != "_") return; 
 
-    while (state.openedLetters()[randomIndex] != "_") randomIndex = dis(gen); 
-
-    QString letter = state.currentWord().mid(randomIndex * 2, 2);
+    QString letter = state.currentWord().mid(randomIndex, 2);
     std::vector<QString> openedLetters_copy = state.openedLetters();
     openedLetters_copy[randomIndex] = letter;
     state.setOpenedLetters(openedLetters_copy);

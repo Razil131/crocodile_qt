@@ -11,7 +11,7 @@
 class CROCODILE_BACK_EXPORT GameState
 {
 public:
-    static const int ROUND_TIME = 60*1; //DEBUG было 60*5
+    static const int ROUND_TIME = 60*3;
 
 private:
     std::time_t roundEndTime_;

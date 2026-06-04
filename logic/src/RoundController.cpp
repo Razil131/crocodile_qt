@@ -42,11 +42,6 @@ void RoundController::setWord(const QString& word){
     wordManager_.setCurrentWord(state_,word);
     wordTimer_->stop();
     roundManager_.startNewRound(state_);
-    if (!state_.isRoundInProgress()){
-        emit gameEnded();
-        roundManager_.restartGame(state_);
-        return;
-    }
     emit roundStarted(state_.RoundNum(), word);
     if (!gameTimer_->isActive()){
         gameTimer_->start(1000);
@@ -95,6 +90,11 @@ void RoundController::stopRoundAndNext()
     emit roundEnded();
     
     nextExplainer();
-
+    if (state_.RoundNum()>=state_.RoundCount()){
+        emit gameEnded();
+        roundManager_.restartGame(state_);
+        return;
+    }
+    
     QTimer::singleShot(1000, this, &RoundController::startWordChooseAndRound);
 }

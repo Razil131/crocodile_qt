@@ -2,12 +2,12 @@ cmake_minimum_required(VERSION 3.16)
 
 project(crocodile_back VERSION 0.1.0 LANGUAGES CXX)
 
-set(CMAKE_CXX_STANDARD 17)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(CMAKE_AUTOMOC ON)
 
-find_package(Qt6 REQUIRED COMPONENTS Core Gui)
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Test)
 
 set(SOURCE_FILE
     ./src/GameState.cpp
@@ -18,7 +18,6 @@ set(SOURCE_FILE
     ./src/WordManager.cpp
     ./src/RoundController.cpp
     ./src/ChatController.cpp
-    ./src/DrawController.cpp
     ./src/PlayerController.cpp
 
     ./include/DrawController.hpp
@@ -46,31 +45,50 @@ target_link_libraries(crocodile_back
 
 include(FetchContent)
 
-# FetchContent_Declare(
-#     googletest
-#     URL https://github.com/google/googletest/archive/refs/tags/v1.14.0.zip
-# )
+FetchContent_Declare(
+    googletest
+    URL https://github.com/google/googletest/archive/refs/tags/v1.14.0.zip
+)
 
-# set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
+set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
 
-# FetchContent_MakeAvailable(googletest)
+FetchContent_MakeAvailable(googletest)
 
-# add_executable(run_project_tests
-#     ./tests/GameController_test.cpp
-# )
+set(TEST_SOURCES
+    ./tests/GameState_test.cpp
+    ./tests/ChatManager_test.cpp
+    ./tests/WordManager_test.cpp
+    ./tests/Player_test.cpp
+    ./tests/PlayerController_test.cpp
+    ./tests/ChatController_test.cpp
+    ./tests/RoundManager_test.cpp
+    ./tests/RoundController_test.cpp
+    ./tests/GameController_test.cpp
+)
 
-# target_include_directories(run_project_tests
-#     PRIVATE
-#     ${CMAKE_SOURCE_DIR}/include
-# )
+add_executable(run_project_tests
+    ${TEST_SOURCES}
+)
 
-# target_link_libraries(run_project_tests
-#     PRIVATE
-#     crocodile_back
-#     gtest_main
-#     Qt6::Core
-# )
+target_compile_definitions(run_project_tests
+    PRIVATE UNIT_TESTS
+)
 
-# enable_testing()
-# include(GoogleTest)
-# gtest_discover_tests(run_project_tests)
+target_include_directories(run_project_tests
+    PRIVATE
+    ${CMAKE_SOURCE_DIR}/include
+)
+
+target_link_libraries(run_project_tests
+    PRIVATE
+    crocodile_back
+    gtest_main
+    gmock
+    Qt6::Core
+    Qt6::Gui
+    Qt6::Test
+)
+
+enable_testing()
+include(GoogleTest)
+gtest_discover_tests(run_project_tests)
