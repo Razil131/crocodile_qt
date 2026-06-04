@@ -27,6 +27,7 @@ GameWindow::GameWindow(GameController* ctrl, QWidget *parent)
     connect(controller, &GameController::roundEnded, this, &GameWindow::onRoundEnded);
     connect(controller, &GameController::explainerUpdated, this, &GameWindow::onExplainerUpdated);
     connect(controller, &GameController::messageReceived, this, &GameWindow::onMessageReceived);
+    connect(controller, &GameController::gameEnded, this, &GameWindow::onGameEnded);
 
     connect(ui->Canvas, &PaintWidget::commandGenerated, controller->draw(), &DrawController::broadcastCommand);
     connect(controller, &GameController::drawCommandReceived, ui->Canvas, &PaintWidget::executeCommand);
@@ -161,7 +162,7 @@ void GameWindow::on_EnterChat_released()
 }
 
 void GameWindow::chatUpdate() {
- //
+    //
 }
 
 void GameWindow::onMessageReceived(int senderId, const QString& senderName, const QString& text) {
@@ -171,17 +172,23 @@ void GameWindow::onMessageReceived(int senderId, const QString& senderName, cons
 
 void GameWindow::on_Word1Label_clicked()
 {
-    controller->round()->setWord(ui->Word1Label->text());
+    if (controller->players()->isExplainerByID(playerId_)) {
+        controller->round()->setWord(ui->Word1Label->text());
+    }
 }
 
 void GameWindow::on_Word2Label_clicked()
 {
-    controller->round()->setWord(ui->Word2Label->text());
+    if (controller->players()->isExplainerByID(playerId_)) {
+        controller->round()->setWord(ui->Word2Label->text());
+    }
 }
 
 void GameWindow::on_Word3Label_clicked()
 {
-    controller->round()->setWord(ui->Word3Label->text());
+    if (controller->players()->isExplainerByID(playerId_)) {
+        controller->round()->setWord(ui->Word3Label->text());
+    }
 }
 
 void GameWindow::playersTableUpdate() {
@@ -326,4 +333,20 @@ void GameWindow::onExplainerUpdated(int newExplainerId) {
     ui->BrushSizeSlider->setEnabled(isMeExplainer);
 
     playersTableUpdate();
+}
+
+void GameWindow::onGameEnded(){
+    tableInChat();
+    qDebug() << "onGameEnded вызван!";
+    playersTableUpdate();
+    ui->StartGameButton->show();
+}
+
+void GameWindow::tableInChat(){
+    const std::vector<Player>& players = controller->getPlayers();
+    for (size_t i = 0; i < players.size(); ++i) {
+        const auto& player = players[i];
+        QString output = "Игрок " + player.name() + " заработал: " + QString::number(player.score()) + " очков!";
+        controller->chat()->messageReceived(-1, "Система", output);
+    }
 }

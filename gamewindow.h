@@ -50,6 +50,7 @@ private slots:
     void onRoundEnded();
     void onExplainerUpdated(int newExplainerId);
     void onMessageReceived(int senderId, const QString& senderName, const QString& text);
+    void onGameEnded();
 
 private:
     Ui::GameWindow *ui;
@@ -57,6 +58,7 @@ private:
     void showRound();
     void playersTableUpdate();
     void tableCreate();
+    void tableInChat();
 
     GameController* controller;
     int playerId_ = -1;
