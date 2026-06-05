@@ -42,7 +42,13 @@ GameController::GameController(){
     connect(roundController_, &RoundController::explainerUpdated, this, &GameController::explainerUpdated);
     connect(roundController_, &RoundController::wordTimerUpdated, this, &GameController::wordTimerUpdated);
     connect(roundController_, &RoundController::roundStarted, this, &GameController::roundStarted);
-    connect(roundController_, &RoundController::roundEnded, this, &GameController::roundEnded);
+    connect(roundController_, &RoundController::roundEnded, this, [this]() {
+        emit this->roundEnded(); 
+
+        QTimer::singleShot(0, this, [this]() {
+            emit this->playersUpdated();
+        });
+    });
     connect(roundController_, &RoundController::timerUpdated, this, &GameController::timerUpdated);
     connect(roundController_, &RoundController::openedLettersUpdated, this, &GameController::openedLettersUpdated);
     connect(roundController_, &RoundController::wordsForChooseReady, this, &GameController::wordsForChooseReady);

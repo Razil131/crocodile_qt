@@ -49,7 +49,7 @@ TEST_F(WordManagerTest, SetCurrentWordInitializesStateCorrectly) {
 
     EXPECT_EQ(state.countLettersToOpen(), 5);
 
-    EXPECT_EQ(state.letterTimeInterval(), 45);
+    EXPECT_EQ(state.letterTimeInterval(), 28);
 
     ASSERT_EQ(state.openedLetters().size(), 9);
     for (const auto& letter : state.openedLetters()) {

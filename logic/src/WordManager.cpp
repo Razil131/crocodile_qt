@@ -56,7 +56,7 @@ void WordManager::openRandomLetter(GameState& state){
     } 
     if (state.openedLetters()[randomIndex] != "_") return; 
 
-    QString letter = state.currentWord().mid(randomIndex, 2);
+    QString letter = state.currentWord().mid(randomIndex, 1);
     std::vector<QString> openedLetters_copy = state.openedLetters();
     openedLetters_copy[randomIndex] = letter;
     state.setOpenedLetters(openedLetters_copy);
@@ -93,7 +93,7 @@ void WordManager::setCurrentWord(GameState& state, const QString& word){
     int lettersToOpen = std::max(1, (numLetters / 2 + 1));
     state.setCountLettersToOpen(lettersToOpen);
 
-    double letterIntervalCoeff = 5/4.0;
+    double letterIntervalCoeff = 4/5.0;
     double interval = (state.ROUND_TIME * letterIntervalCoeff) / lettersToOpen;
     state.setLetterTimeInterval(std::max(1.0, interval));
 
