@@ -80,10 +80,16 @@ CMakeLists.txt.user*
 .pch/
 .rcc/
 .uic/
-/build*/
+!/build/
+/build/*
 /.qtcreator/
 
 
 # logic dir
 
 /logic/build*/
+
+# exclude words txt
+
+!build/russian.utf-8
+!build/russian_easy.utf-8
