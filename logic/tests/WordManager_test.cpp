@@ -136,7 +136,7 @@ TEST_F(WordManagerTest, ChooseRandomWordReturnsFallbackWhenFileMissing) {
 }
 
 TEST_F(WordManagerTest, ChooseWordsReturnsExactlyThreeWords) {
-    std::vector<QString> choices = wm.chooseWords();
+    QList<QString> choices = wm.chooseWords();
     EXPECT_EQ(choices.size(), 3);
     for (const auto& word : choices) {
         EXPECT_FALSE(word.isEmpty());

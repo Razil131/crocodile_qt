@@ -17,7 +17,7 @@ signals:
     void wordTimerUpdated(std::time_t timeLeft);
     void roundEnded();
     void timerUpdated(std::time_t timeLeft);
-    void openedLettersUpdated(const std::vector<QString>& openedLetters);
+    void openedLettersUpdated(const QList<QString>& openedLetters);
     void roundStarted(int roundNum, const QString& wordToDraw);
     void gameEnded();
     void wordsForChooseReady(const QString& w1, const QString& w2, const QString& w3);
@@ -25,7 +25,7 @@ private:
     GameState& state_;
     bool wordChosen_ = false;
     int wordTimeLeft_;
-    std::vector<QString> currentWords_;
+    QList<QString> currentWords_;
     QTimer* gameTimer_;
     QTimer* wordTimer_;
     RoundManager& roundManager_;

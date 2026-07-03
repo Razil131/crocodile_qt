@@ -74,7 +74,7 @@ TEST_F(GameStateTest, ExplainerHandlesMissingPlayerGracefully) {
 TEST_F(GameStateTest, MutablePlayersAllowsModifications) {
     state.addPlayer(p1);
     
-    std::vector<Player>& mutable_p = state.mutablePlayers();
+    QList<Player>& mutable_p = state.mutablePlayers();
     ASSERT_EQ(mutable_p.size(), 1);
     
     mutable_p[0].setScore(500);
@@ -97,7 +97,7 @@ TEST_F(GameStateTest, ClearAndResizeOpenedLettersCorrectly) {
 }
 
 TEST_F(GameStateTest, ClearAndResizeHandlesZeroAndOverwrite) {
-    std::vector<QString> customLetters = {"A", "B", "C"};
+    QList<QString> customLetters = {"A", "B", "C"};
     state.setOpenedLetters(customLetters);
     
     state.clearAndResizeOpenedLetters(0);

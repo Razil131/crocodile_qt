@@ -55,12 +55,12 @@ GameController::GameController(){
     connect(roundController_, &RoundController::gameEnded, this, &GameController::gameEnded);
 }
 
-const std::vector<std::pair<QString, QString>>& GameController::getChatHistory() const {
-    static std::vector<std::pair<QString, QString>> dummy;
+const QList<std::pair<QString, QString>>& GameController::getChatHistory() const {
+    static QList<std::pair<QString, QString>> dummy;
     return dummy; 
 }
 
-const std::vector<Player>& GameController::getPlayers() {
+const QList<Player>& GameController::getPlayers() {
     return state_.players();
 }
 
@@ -68,7 +68,7 @@ int GameController::getRoundTime() {
     return state_.ROUND_TIME;
 }
 
-std::vector<QString> GameController::getOpenedLetters() {
+QList<QString> GameController::getOpenedLetters() {
     return state_.openedLetters();
 }
 

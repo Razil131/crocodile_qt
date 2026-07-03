@@ -56,7 +56,7 @@ void GameWindow::setPlayer(int assignedId) {
     playersTableUpdate();
 }
 
-QString GameWindow::getWordLabelStr(const std::vector<QString>& letters) {
+QString GameWindow::getWordLabelStr(const QList<QString>& letters) {
     if (!controller->players()->isExplainerByID(playerId_) &&
         !controller->players()->getPlayerById(playerId_).isCurrentWordGuessed())
     {
@@ -195,7 +195,7 @@ void GameWindow::playersTableUpdate() {
     ui->PlayersTable->setUpdatesEnabled(false);
     ui->PlayersTable->clearContents();
 
-    const std::vector<Player>& players = controller->getPlayers();
+    const QList<Player>& players = controller->getPlayers();
     ui->PlayersTable->setRowCount(players.size());
 
     for (size_t row = 0; row < players.size(); ++row) {
@@ -302,7 +302,7 @@ void GameWindow::onRoundStarted(int roundNum, const QString& wordToDraw) {
     showRound();
 }
 
-void GameWindow::onOpenedLettersUpdated(const std::vector<QString>& openedLetters) {
+void GameWindow::onOpenedLettersUpdated(const QList<QString>& openedLetters) {
     ui->WordLabel->setText(getWordLabelStr(openedLetters));
 }
 
@@ -343,7 +343,7 @@ void GameWindow::onGameEnded(){
 }
 
 void GameWindow::tableInChat(){
-    const std::vector<Player>& players = controller->getPlayers();
+    const QList<Player>& players = controller->getPlayers();
     for (size_t i = 0; i < players.size(); ++i) {
         const auto& player = players[i];
         QString output = "Игрок " + player.name() + " заработал: " + QString::number(player.score()) + " очков!";

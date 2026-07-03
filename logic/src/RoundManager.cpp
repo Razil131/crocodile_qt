@@ -4,7 +4,7 @@
 void RoundManager::startNewRound(GameState& state){
     state.setRoundInProgress(true);
     if (state.RoundNum() == 0){
-        state.setRoundCount(size(state.players()));
+        state.setRoundCount(state.players().size());
     }
     if (state.RoundCount() == state.RoundNum()){
         state.setRoundInProgress(false);

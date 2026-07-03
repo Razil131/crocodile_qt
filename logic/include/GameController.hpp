@@ -40,7 +40,7 @@ signals:
     void roundStarted(int roundNum, const QString& wordToDraw);
     void roundEnded();
     void timerUpdated(std::time_t timeLeft);
-    void openedLettersUpdated(const std::vector<QString>& openedLetters);
+    void openedLettersUpdated(const QList<QString>& openedLetters);
     void wordsForChooseReady(const QString& w1, const QString& w2, const QString& w3);
     void gameEnded();
 
@@ -52,10 +52,10 @@ public:
     PlayerController* players() const { return playerController_; }
     RoundController* round() const { return roundController_; }
 
-    const std::vector<std::pair<QString, QString>>& getChatHistory() const;
-    const std::vector<Player>& getPlayers();
+    const QList<std::pair<QString, QString>>& getChatHistory() const;
+    const QList<Player>& getPlayers();
     int getRoundTime();
-    std::vector<QString> getOpenedLetters();
+    QList<QString> getOpenedLetters();
     QString getIP();
     int getRound();
     int getRoundCount();

@@ -3,9 +3,14 @@
 #include <cctype>
 #include <random>
 #include <iostream>
+#include <vector>
 #include <QObject>
+#include <QDataStream>
+#include <QList>
+#include "Player.hpp"
 #include "exportMacro.hpp"
 #include "RoundManager.hpp"
+
 
 
 class CROCODILE_BACK_EXPORT GameState
@@ -15,13 +20,13 @@ public:
 
 private:
     std::time_t roundEndTime_;
-    std::vector<Player> players_;
+    QList<Player> players_;
     int explainerID_;
     int roundNum_;
     int roundCount_;
     bool roundInProgress_;
     QString currentWord_;
-    std::vector<QString> openedLetters_;
+    QList<QString> openedLetters_;
     int alreadyOpenedLetters_;
     int countLettersToOpen_;
     int letterTimeInterval_;
@@ -32,17 +37,17 @@ public:
     ~GameState(){}
 
     std::time_t roundEndTime() const {return roundEndTime_;}
-    const std::vector<Player>& players() { return players_; }
-    std::vector<Player>& mutablePlayers() { return players_; }
+    const QList<Player>& players() const { return players_; }
+    QList<Player>& mutablePlayers() { return players_; }
     void addPlayer(const Player& ply) { players_.push_back(ply); }
 
     int explainerID() const { return explainerID_; }
     Player& explainer();
     void setExplainerID(int explainerID) { explainerID_ = explainerID; }
     
-    int RoundNum(){return roundNum_;}
-    int RoundCount(){return roundCount_;}
-    bool isRoundInProgress(){return roundInProgress_;}
+    int RoundNum() const {return roundNum_;}
+    int RoundCount() const {return roundCount_;}
+    bool isRoundInProgress() const {return roundInProgress_;}
 
     void setRoundInProgress(bool roundInProgress) { roundInProgress_ = roundInProgress; }
     void setRoundCount(int roundCount) { roundCount_ = roundCount; }
@@ -59,8 +64,8 @@ public:
     int alreadyOpenedLetters() const { return alreadyOpenedLetters_; }
     void setAlreadyOpenedLetters(int alreadyOpenedLetters) { alreadyOpenedLetters_ = alreadyOpenedLetters; }
 
-    const std::vector<QString>& openedLetters() const { return openedLetters_; }
-    void setOpenedLetters(const std::vector<QString> &openedLetters) { openedLetters_ = openedLetters; }
+    const QList<QString>& openedLetters() const { return openedLetters_; }
+    void setOpenedLetters(const QList<QString> &openedLetters) { openedLetters_ = openedLetters; }
 
     const QString currentWord() const { return currentWord_; }
     void setCurrentWord(const QString &currentWord) { currentWord_ = currentWord; }

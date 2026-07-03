@@ -11,9 +11,9 @@
 
 class CROCODILE_BACK_EXPORT ChatManager{
 private:
-    std::vector<std::pair<QString,QString>> messages_;
+    QList<std::pair<QString,QString>> messages_;
     bool tryGuess(Player& ply,GameState& gameState, WordManager& wordManager, const QString& word);
 public:
     bool addMessage(Player& ply, const QString& message, GameState& gameState, WordManager& wordManager);
-    const std::vector<std::pair<QString,QString>>& messages() const {return messages_;}
+    const QList<std::pair<QString,QString>>& messages() const {return messages_;}
 };

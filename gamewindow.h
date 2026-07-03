@@ -43,7 +43,7 @@ private slots:
 
     void onWordChooseStarted(const QString& w1, const QString& w2, const QString& w3);
     void onRoundStarted(int roundNum, const QString& wordToDraw);
-    void onOpenedLettersUpdated(const std::vector<QString>& openedLetters);
+    void onOpenedLettersUpdated(const QList<QString>& openedLetters);
     void onGameTimerUpdated(std::time_t timeLeft);
     void onWordTimerUpdated(std::time_t timeLeft);
     void onRoundEnded();
@@ -53,7 +53,7 @@ private slots:
 
 private:
     Ui::GameWindow *ui;
-    QString getWordLabelStr(const std::vector<QString>& letters);
+    QString getWordLabelStr(const QList<QString>& letters);
     void showRound();
     void playersTableUpdate();
     void tableCreate();

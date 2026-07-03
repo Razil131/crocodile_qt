@@ -1,5 +1,62 @@
 #include "GameState.hpp"
 
+// вывод
+QDataStream &operator<<(QDataStream &out, const GameState &state) {
+    out << qint64(state.roundEndTime())
+        << state.players()              
+        << qint32(state.explainerID())
+        << qint32(state.RoundNum())
+        << qint32(state.RoundCount())
+        << state.isRoundInProgress()
+        << state.currentWord()
+        << state.openedLetters()   
+        << qint32(state.alreadyOpenedLetters())
+        << qint32(state.countLettersToOpen())
+        << qint32(state.letterTimeInterval());
+        
+    return out;
+}
+// ввод
+QDataStream &operator>>(QDataStream &in, GameState &state) {
+    qint64 roundEndTime;
+    QList<Player> players;
+    qint32 explainerID;
+    qint32 roundNum;
+    qint32 roundCount;
+    bool roundInProgress;
+    QString currentWord;
+    QList<QString> openedLetters;
+    qint32 alreadyOpenedLetters;
+    qint32 countLettersToOpen;
+    qint32 letterTimeInterval;
+
+    in >> roundEndTime 
+       >> players 
+       >> explainerID 
+       >> roundNum 
+       >> roundCount 
+       >> roundInProgress 
+       >> currentWord 
+       >> openedLetters 
+       >> alreadyOpenedLetters 
+       >> countLettersToOpen 
+       >> letterTimeInterval;
+
+    state.setRoundEndTime(static_cast<std::time_t>(roundEndTime));
+    state.mutablePlayers() = players;
+    state.setExplainerID(explainerID);
+    state.setRoundNum(roundNum);
+    state.setRoundCount(roundCount);
+    state.setRoundInProgress(roundInProgress);
+    state.setCurrentWord(currentWord);
+    state.setOpenedLetters(openedLetters);
+    state.setAlreadyOpenedLetters(alreadyOpenedLetters);
+    state.setCountLettersToOpen(countLettersToOpen);
+    state.setLetterTimeInterval(letterTimeInterval);
+
+    return in;
+}
+
 GameState::GameState() :  
     roundEndTime_(std::time(nullptr) + ROUND_TIME),
     explainerID_(1),

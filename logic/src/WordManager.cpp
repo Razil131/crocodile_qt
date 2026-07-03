@@ -2,7 +2,7 @@
 
 
 QString WordManager::chooseRandomWord(){
-    std::vector<std::string> words = getWordsFromFile("../russian.utf-8");
+    QList<std::string> words = getWordsFromFile("../russian.utf-8");
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_int_distribution<> dis(0, words.size() - 1);
@@ -12,13 +12,13 @@ QString WordManager::chooseRandomWord(){
     return QString::fromStdString(words[randomIndex]);
 }
 
-std::vector<std::string> WordManager::getWordsFromFile(const std::string& fileName){
+QList<std::string> WordManager::getWordsFromFile(const std::string& fileName){
     std::ifstream file(fileName);
     if (!file.is_open()) {
         std::cerr << "File didn't opened check the path!" << " " << fileName << std::endl;
     }
 
-    std::vector<std::string> words;
+    QList<std::string> words;
     std::string line;
     while (std::getline(file, line)) {
         if (!line.empty()) {
@@ -57,7 +57,7 @@ void WordManager::openRandomLetter(GameState& state){
     if (state.openedLetters()[randomIndex] != "_") return; 
 
     QString letter = state.currentWord().mid(randomIndex, 1);
-    std::vector<QString> openedLetters_copy = state.openedLetters();
+    QList<QString> openedLetters_copy = state.openedLetters();
     openedLetters_copy[randomIndex] = letter;
     state.setOpenedLetters(openedLetters_copy);
     state.setCountLettersToOpen(state.countLettersToOpen()-1);
@@ -104,8 +104,8 @@ bool WordManager::isWordCorrect(GameState& state, const QString& word){
     return normalize(word) == state.currentWord();
 }
 
-std::vector<QString> WordManager::chooseWords(){
-    std::vector<QString> words;
+QList<QString> WordManager::chooseWords(){
+    QList<QString> words;
     words.clear();
     for (int i = 0; i<3; i++) // тк на выбор 3 слова
         words.push_back(chooseRandomWord());

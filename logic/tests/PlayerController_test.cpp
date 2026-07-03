@@ -74,10 +74,10 @@ TEST(PlayerControllerTest, AreAllGuessedHandlesGameLogic) {
     EXPECT_FALSE(controller.areAllGuessed());
 
 
-    state.mutablePlayers().at(1).setIsCurrentWordGuessed(true);
+    state.mutablePlayers()[1].setIsCurrentWordGuessed(true);
     EXPECT_FALSE(controller.areAllGuessed());
 
-    state.mutablePlayers().at(2).setIsCurrentWordGuessed(true);
+    state.mutablePlayers()[2].setIsCurrentWordGuessed(true);
     
     EXPECT_TRUE(controller.areAllGuessed());
 }
