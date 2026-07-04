@@ -7,7 +7,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(CMAKE_AUTOMOC ON)
 
-find_package(Qt6 REQUIRED COMPONENTS Core Gui Test)
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Network Test)
 
 set(SOURCE_FILE
     ./src/GameState.cpp
@@ -19,6 +19,7 @@ set(SOURCE_FILE
     ./src/RoundController.cpp
     ./src/ChatController.cpp
     ./src/PlayerController.cpp
+    ./src/NetworkManager.cpp
 
     ./include/DrawController.hpp
     ./include/GameController.hpp
@@ -27,6 +28,8 @@ set(SOURCE_FILE
     ./include/RoundController.hpp
     ./include/ChatController.hpp
     ./include/PlayerController.hpp
+    ./include/NetworkTypes.hpp
+    ./include/NetworkManager.hpp
 )
 
 include_directories(${CMAKE_SOURCE_DIR}/include)
@@ -41,7 +44,10 @@ target_link_libraries(crocodile_back
     PRIVATE
     Qt6::Core
     Qt6::Gui
+    Qt6::Network
 )
+
+return()
 
 include(FetchContent)
 
@@ -87,6 +93,7 @@ target_link_libraries(run_project_tests
     Qt6::Core
     Qt6::Gui
     Qt6::Test
+    Qt6::Network
 )
 
 enable_testing()

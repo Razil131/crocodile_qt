@@ -26,3 +26,14 @@ void JoinDialog::accept()
 
     QDialog::accept();
 }
+
+
+void JoinDialog::on_buttonBox_accepted()
+{
+    IP = ui->IPInput1->text().trimmed() + "." +
+         ui->IPInput2->text().trimmed() + "." +
+         ui->IPInput3->text().trimmed() + "." +
+         ui->IPInput4->text().trimmed();
+    port = ui->PortSpinBox->value();
+}
+

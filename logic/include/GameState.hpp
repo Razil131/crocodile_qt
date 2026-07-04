@@ -72,3 +72,6 @@ public:
 
     void clearAndResizeOpenedLetters(int size);
 };
+
+CROCODILE_BACK_EXPORT QDataStream &operator<<(QDataStream &out, const GameState &state);
+CROCODILE_BACK_EXPORT QDataStream &operator>>(QDataStream &in, GameState &state);

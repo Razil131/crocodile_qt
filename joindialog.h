@@ -16,9 +16,14 @@ public:
     explicit JoinDialog(QWidget *parent = nullptr);
     ~JoinDialog();
     void accept() override;
+    QString IP = "";
+    int port = 0;
 
 signals:
     void nicknameEntered(const QString& nickname);
+
+private slots:
+    void on_buttonBox_accepted();
 
 private:
     Ui::JoinDialog *ui;
