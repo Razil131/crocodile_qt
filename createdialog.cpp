@@ -23,6 +23,6 @@ void CreateDialog::accept()
     }
 
     emit nicknameEntered(nickname);
-
+    port = ui->PortSpinBox->value();
     QDialog::accept();
 }

@@ -10,6 +10,7 @@
 #include "DrawController.hpp"
 #include "PlayerController.hpp"
 #include "RoundController.hpp"
+#include "NetworkManager.hpp"
 
 class CROCODILE_BACK_EXPORT GameController : public QObject {
     Q_OBJECT
@@ -22,6 +23,7 @@ private:
     DrawController* drawController_;
     PlayerController* playerController_;
     RoundController* roundController_;
+    NetworkManager* networkManager_;
 
     std::time_t getTimeLeft();
 
@@ -60,4 +62,12 @@ public:
     int getRound();
     int getRoundCount();
     QString getWord();
+
+    // NETWORKING
+
+    void startNetworkServer(quint16 port);
+    void connectToNetworkServer(const QString& ip, quint16 port);
+    void sendChatMessage(const QString& text);
+    void sendDrawCommand(const DrawCommand& cmd);
+    void sendCurrentGameState();
 };

@@ -7,7 +7,7 @@ GameController::GameController(){
     drawController_   = new DrawController();
     playerController_ = new PlayerController(state_);
     roundController_  = new RoundController(state_, wordmanager_, roundmanager_);
-
+    networkManager_ = new NetworkManager(this);
 
     connect(chatController_, &ChatController::playerGuessedWord, this, [this](int playerId, int scoreBonus) {
         Player& ply = playerController_->getPlayerById(playerId);
@@ -53,6 +53,11 @@ GameController::GameController(){
     connect(roundController_, &RoundController::openedLettersUpdated, this, &GameController::openedLettersUpdated);
     connect(roundController_, &RoundController::wordsForChooseReady, this, &GameController::wordsForChooseReady);
     connect(roundController_, &RoundController::gameEnded, this, &GameController::gameEnded);
+    connect(networkManager_, &NetworkManager::gameStateReceived, this, [this](const GameState& newState) {
+        this->state_ = newState;
+        emit playersUpdated();
+        emit chatUpdated();
+    });
 }
 
 const QList<std::pair<QString, QString>>& GameController::getChatHistory() const {
@@ -91,4 +96,27 @@ QString GameController::getWord() {
 std::time_t GameController::getTimeLeft() {
     std::time_t time_left = state_.roundEndTime() - std::time(nullptr);
     return time_left >= 0 ? time_left : 0;
+}
+
+// NETWORK
+
+void GameController::startNetworkServer(quint16 port) {
+    networkManager_->startServer(port);
+}
+
+void GameController::connectToNetworkServer(const QString& ip, quint16 port) {
+    networkManager_->connectToServer(ip, port);
+}
+
+void GameController::sendChatMessage(const QString& text) {
+
+    networkManager_->sendMessage(text);
+}
+
+void GameController::sendDrawCommand(const DrawCommand& cmd) {
+    networkManager_->sendDraw(cmd);
+}
+
+void GameController::sendCurrentGameState() {
+    networkManager_->sendState(state_);
 }

@@ -27,6 +27,7 @@ void MainWindow::on_createButton_clicked()
     });
 
     if (c_dialog.exec() == QDialog::Accepted) {
+        controller.startNetworkServer(c_dialog.port);
         g->show();
     }
     else {
@@ -45,6 +46,7 @@ void MainWindow::on_connectButton_clicked()
     });
 
     if (j_dialog.exec() == QDialog::Accepted) {
+        controller.connectToNetworkServer(j_dialog.IP,j_dialog.port);
         g->show();
     }
     else {
