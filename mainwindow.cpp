@@ -20,15 +20,19 @@ MainWindow::~MainWindow()
 void MainWindow::on_createButton_clicked()
 {
     CreateDialog c_dialog(this);
-    GameWindow *g = new GameWindow(&controller, this);
 
-    connect(&c_dialog, &CreateDialog::nicknameEntered, this, [this, g](const QString& nickname) {
-        Player& newPlayer = controller.players()->createAndAddPlayer(nickname);
+    GameController* localController = new GameController();
+    GameWindow *g = new GameWindow(localController, this);
+
+    localController->setParent(g);
+
+    connect(&c_dialog, &CreateDialog::nicknameEntered, this, [localController, g](const QString& nickname) {
+        Player& newPlayer = localController->players()->createAndAddPlayer(nickname);
         g->setPlayer(newPlayer.id());
     });
 
     if (c_dialog.exec() == QDialog::Accepted) {
-        controller.startNetworkServer(c_dialog.port);
+        localController->startNetworkServer(c_dialog.port);
         g->show();
     }
     else {
@@ -39,15 +43,21 @@ void MainWindow::on_createButton_clicked()
 void MainWindow::on_connectButton_clicked()
 {
     JoinDialog j_dialog(this);
-    GameWindow *g = new GameWindow(&controller, this);
+
+    GameController* localController = new GameController();
+    GameWindow *g = new GameWindow(localController, this);
+
+    localController->setParent(g);
+
     QString capturedNickname;
     connect(&j_dialog, &JoinDialog::nicknameEntered, this, [&capturedNickname](const QString& nickname) {
         capturedNickname = nickname;
     });
-    connect(&controller, &GameController::localPlayerIdAssigned, g, &GameWindow::setPlayer);
+
+    connect(localController, &GameController::localPlayerIdAssigned, g, &GameWindow::setPlayer);
 
     if (j_dialog.exec() == QDialog::Accepted) {
-        controller.connectToNetworkServer(j_dialog.IP, j_dialog.port, capturedNickname);
+        localController->connectToNetworkServer(j_dialog.IP, j_dialog.port, capturedNickname);
         g->show();
     }
     else {

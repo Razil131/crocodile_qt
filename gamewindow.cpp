@@ -22,14 +22,13 @@ GameWindow::GameWindow(GameController* ctrl, QWidget *parent)
     connect(controller, &GameController::wordsForChooseReady, this, &GameWindow::onWordChooseStarted);
     connect(controller, &GameController::roundStarted, this, &GameWindow::onRoundStarted);
     connect(controller, &GameController::openedLettersUpdated, this, &GameWindow::onOpenedLettersUpdated);
-    connect(controller, &GameController::timerUpdated, this, &GameWindow::onGameTimerUpdated);
     connect(controller, &GameController::wordTimerUpdated, this, &GameWindow::onWordTimerUpdated);
     connect(controller, &GameController::roundEnded, this, &GameWindow::onRoundEnded);
     connect(controller, &GameController::explainerUpdated, this, &GameWindow::onExplainerUpdated);
     connect(controller, &GameController::messageReceived, this, &GameWindow::onMessageReceived);
     connect(controller, &GameController::gameEnded, this, &GameWindow::onGameEnded);
 
-    connect(ui->Canvas, &PaintWidget::commandGenerated, controller->draw(), &DrawController::broadcastCommand);
+    connect(ui->Canvas, &PaintWidget::commandGenerated, controller, &GameController::sendDrawCommand);
     connect(controller, &GameController::drawCommandReceived, ui->Canvas, &PaintWidget::executeCommand);
 
     connect(pressTimer, &QTimer::timeout, this, [=]() {
@@ -38,6 +37,17 @@ GameWindow::GameWindow(GameController* ctrl, QWidget *parent)
     });
 
     tableCreate();
+
+    QTimer* uiTimer = new QTimer(this);
+    connect(uiTimer, &QTimer::timeout, this, [this]() {
+        if (controller->getRound() > 0) {
+            this->onGameTimerUpdated(controller->getTimeLeft());
+        } else {
+            ui->TimeLeftLabel->setText("--");
+            ui->TimeLeftBar->setValue(0);
+        }
+    });
+    uiTimer->start(500);
 }
 
 GameWindow::~GameWindow()
@@ -52,6 +62,16 @@ void GameWindow::setPlayer(int assignedId) {
     bool isMeExplainer = controller->players()->isExplainer(myPlayer);
     ui->Canvas->setDrawingEnabled(isMeExplainer);
     ui->BrushSizeSlider->setEnabled(isMeExplainer);
+
+    if (!isMeExplainer) {
+        ui->StartGameButton->hide();
+    } else {
+        if (controller->getRound() == 0) {
+            ui->StartGameButton->show();
+        } else {
+            ui->StartGameButton->hide();
+        }
+    }
 
     playersTableUpdate();
 }
@@ -74,7 +94,7 @@ void GameWindow::on_StartGameButton_clicked()
 {
     if (controller->players()->isExplainerByID(playerId_)) {
         ui->StartGameButton->hide();
-        controller->round()->startWordChooseAndRound();
+        controller->startGame();
     }
 }
 
@@ -156,11 +176,9 @@ void GameWindow::on_EnterChat_released()
     ui->InputChat->clear();
 
     if (!input.isEmpty()) {
-        Player& myPlayer = controller->players()->getPlayerById(playerId_);
-        controller->chat()->sendMessage(myPlayer, input);
+        controller->sendChatMessage(input);
     }
 }
-
 void GameWindow::chatUpdate() {
     //
 }
@@ -173,21 +191,21 @@ void GameWindow::onMessageReceived(int senderId, const QString& senderName, cons
 void GameWindow::on_Word1Label_clicked()
 {
     if (controller->players()->isExplainerByID(playerId_)) {
-        controller->round()->setWord(ui->Word1Label->text());
+        controller->selectWord(ui->Word1Label->text());
     }
 }
 
 void GameWindow::on_Word2Label_clicked()
 {
     if (controller->players()->isExplainerByID(playerId_)) {
-        controller->round()->setWord(ui->Word2Label->text());
+        controller->selectWord(ui->Word2Label->text());
     }
 }
 
 void GameWindow::on_Word3Label_clicked()
 {
     if (controller->players()->isExplainerByID(playerId_)) {
-        controller->round()->setWord(ui->Word3Label->text());
+        controller->selectWord(ui->Word3Label->text());
     }
 }
 
@@ -269,6 +287,8 @@ void GameWindow::onWordChooseStarted(const QString& w1, const QString& w2, const
 
 void GameWindow::onRoundStarted(int roundNum, const QString& wordToDraw) {
 
+    ui->StartGameButton->hide();
+
     bool isMeExplainer = controller->players()->isExplainerByID(playerId_);
     if (!isMeExplainer) {
         ui->FillingButton->hide();
@@ -344,9 +364,9 @@ void GameWindow::onGameEnded(){
 
 void GameWindow::tableInChat(){
     const QList<Player>& players = controller->getPlayers();
-    for (size_t i = 0; i < players.size(); ++i) {
-        const auto& player = players[i];
-        QString output = "Игрок " + player.name() + " заработал: " + QString::number(player.score()) + " очков!";
-        controller->chat()->messageReceived(-1, "Система", output);
+    for (const auto& player : players) {
+        QString output = QString("Система: Игрок %1 заработал: %2 очков!").arg(player.name(), QString::number(player.score()));
+        ui->ChatList->addItem(output);
     }
+    ui->ChatList->scrollToBottom();
 }

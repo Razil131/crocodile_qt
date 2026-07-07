@@ -25,7 +25,6 @@ private:
     RoundController* roundController_;
     NetworkManager* networkManager_;
 
-    std::time_t getTimeLeft();
     bool isServer_ = false;
 
 signals:
@@ -64,12 +63,16 @@ public:
     int getRound();
     int getRoundCount();
     QString getWord();
+    void selectWord(const QString& word);
+    void startGame();
+    std::time_t getTimeLeft();
 
     // NETWORKING
-
+    void setupServerLogic();
     void startNetworkServer(quint16 port);
     void connectToNetworkServer(const QString& ip, quint16 port, const QString& nickname);
     void sendChatMessage(const QString& text);
     void sendDrawCommand(const DrawCommand& cmd);
     void sendCurrentGameState();
+    void processNetworkChatMessage(int senderId, const QString& text);
 };

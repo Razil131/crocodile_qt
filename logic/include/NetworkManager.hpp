@@ -31,6 +31,7 @@ public:
     void sendState(const GameState& state);
     void sendNickname(const QString& nickname);
     void broadcast(const QByteArray &bytes, QTcpSocket* sender);
+    void sendBroadcastMessage(const QString& senderName, const QString& text);
 
 signals:
     void nicknameReceivedFromNetwork(QTcpSocket* clientSocket, const QString& nickname);
