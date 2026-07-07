@@ -2,6 +2,7 @@
 #include "./ui_mainwindow.h"
 #include "createdialog.h"
 #include "joindialog.h"
+#include "ui_joindialog.h"
 #include "gamewindow.h"
 
 MainWindow::MainWindow(QWidget *parent)
@@ -39,14 +40,14 @@ void MainWindow::on_connectButton_clicked()
 {
     JoinDialog j_dialog(this);
     GameWindow *g = new GameWindow(&controller, this);
-
-    connect(&j_dialog, &JoinDialog::nicknameEntered, this, [this, g](const QString& nickname) {
-        Player& newPlayer = controller.players()->createAndAddPlayer(nickname);
-        g->setPlayer(newPlayer.id());
+    QString capturedNickname;
+    connect(&j_dialog, &JoinDialog::nicknameEntered, this, [&capturedNickname](const QString& nickname) {
+        capturedNickname = nickname;
     });
+    connect(&controller, &GameController::localPlayerIdAssigned, g, &GameWindow::setPlayer);
 
     if (j_dialog.exec() == QDialog::Accepted) {
-        controller.connectToNetworkServer(j_dialog.IP,j_dialog.port);
+        controller.connectToNetworkServer(j_dialog.IP, j_dialog.port, capturedNickname);
         g->show();
     }
     else {

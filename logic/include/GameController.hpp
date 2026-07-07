@@ -26,6 +26,7 @@ private:
     NetworkManager* networkManager_;
 
     std::time_t getTimeLeft();
+    bool isServer_ = false;
 
 signals:
     void playerAdded(int playerId, const QString& name);
@@ -45,6 +46,7 @@ signals:
     void openedLettersUpdated(const QList<QString>& openedLetters);
     void wordsForChooseReady(const QString& w1, const QString& w2, const QString& w3);
     void gameEnded();
+    void localPlayerIdAssigned(int id);
 
 public:
     GameController();
@@ -66,7 +68,7 @@ public:
     // NETWORKING
 
     void startNetworkServer(quint16 port);
-    void connectToNetworkServer(const QString& ip, quint16 port);
+    void connectToNetworkServer(const QString& ip, quint16 port, const QString& nickname);
     void sendChatMessage(const QString& text);
     void sendDrawCommand(const DrawCommand& cmd);
     void sendCurrentGameState();

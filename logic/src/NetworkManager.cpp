@@ -1,11 +1,13 @@
 #include "NetworkManager.hpp"
 #include "NetworkTypes.hpp"
 #include "GameState.hpp"
+#include "GameController.hpp"
 #include <QtNetwork/QHostAddress>
 #include <QtCore/QDebug>
+#include <QtCore/QDataStream>
 
-
-void NetworkManager::startServer(quint16 port){
+void NetworkManager::startServer(quint16 port, const QString& hostNickname) {
+    hostNickname_ = hostNickname;
     server_ = new QTcpServer(this);
 
     if (!server_->listen(QHostAddress::Any, port)) {
@@ -25,6 +27,8 @@ void NetworkManager::newConnection(){
             clients_.removeAll(clientSocket);
             clientSocket->deleteLater();
             nextBlockSizes_.remove(clientSocket);
+            clientNames_.remove(clientSocket);
+            clientIds_.remove(clientSocket);
         });
     }
 }
@@ -34,70 +38,101 @@ void NetworkManager::onReadyRead() {
     if (!clientSocket) return;
     QDataStream in(clientSocket);
     in.setVersion(QDataStream::Qt_6_0);
+    quint16 &nextBlockSize = nextBlockSizes_[clientSocket];
     while (true) {
-        quint16 &nextBlockSize = nextBlockSizes_[clientSocket];
         if (nextBlockSize == 0) {
-            if (clientSocket->bytesAvailable() < sizeof(quint16)) {
-                break;
-            }
+            if (clientSocket->bytesAvailable() < sizeof(quint16)) break;
             in >> nextBlockSize;
         }
-        if (clientSocket->bytesAvailable() < nextBlockSize) {
-            break;
-        }
+        if (clientSocket->bytesAvailable() < nextBlockSize) break;
         quint8 rawType;
         in >> rawType;
-        NetworkTypes packetType = static_cast<NetworkTypes>(rawType);
-        switch (packetType) {
-            case NetworkTypes::Draw_: {
-                DrawCommand cmd;
-                in >> cmd; 
-                emit drawCommandReceived(cmd);
-                if(server_){
-                QByteArray buffer;
-                QDataStream out(&buffer, QIODevice::WriteOnly);
-                out.setVersion(QDataStream::Qt_6_0);
-                out << quint16(0) << static_cast<quint8>(NetworkTypes::Draw_) << cmd;
-                out.device()->seek(0);
-                out << quint16(buffer.size() - sizeof(quint16));
-                broadcast(buffer, clientSocket);
-                }
-            break;
+        NetworkTypes type = static_cast<NetworkTypes>(rawType);
+        auto* gameController = qobject_cast<GameController*>(parent());
+        switch (type) {
+        case NetworkTypes::Nickname_: {
+            QString nickname;
+            in >> nickname;
+            clientNames_[clientSocket] = nickname;
+            
+            if (server_ && gameController) {
+                Player& newPlayer = gameController->players()->createAndAddPlayer(nickname);
+                int assignedId = newPlayer.id();
+                clientIds_[clientSocket] = assignedId;
+                QByteArray idBlock;
+                QDataStream idOut(&idBlock, QIODevice::WriteOnly);
+                idOut.setVersion(QDataStream::Qt_6_0);
+                idOut << quint16(0) << static_cast<quint8>(NetworkTypes::IdAssignment_) << qint32(assignedId);
+                idOut.device()->seek(0);
+                idOut << static_cast<quint16>(idBlock.size() - sizeof(quint16));
+                
+                clientSocket->write(idBlock);
+                clientSocket->flush();
+
+                gameController->sendCurrentGameState();
             }
-            case NetworkTypes::Message_: {
+            break;
+        }
+        case NetworkTypes::IdAssignment_: {
+            qint32 assignedId;
+            in >> assignedId;
+            if (!server_ && gameController) {
+                emit clientIdAssigned(assignedId);
+            }
+            break;
+        }
+        case NetworkTypes::Message_: {
+            if (server_) {
                 QString text;
                 in >> text;
-                emit messageReceived(static_cast<int>(clientSocket->socketDescriptor()), "Player", text);
-                if(server_){
-                QByteArray buffer;
-                QDataStream out(&buffer, QIODevice::WriteOnly);
-                out.setVersion(QDataStream::Qt_6_0);
-                out << quint16(0) << static_cast<quint8>(NetworkTypes::Message_) << text;
-                out.device()->seek(0);
-                out << quint16(buffer.size() - sizeof(quint16));
-                broadcast(buffer, clientSocket);                
+                QString senderName = clientNames_.value(clientSocket, "Unknown");
+                int senderId = clientIds_.value(clientSocket, -1);
+
+                QByteArray replyBlock;
+                QDataStream replyOut(&replyBlock, QIODevice::WriteOnly);
+                replyOut.setVersion(QDataStream::Qt_6_0);
+                replyOut << quint16(0) << static_cast<quint8>(NetworkTypes::Message_) << senderName << text;
+                replyOut.device()->seek(0);
+                replyOut << static_cast<quint16>(replyBlock.size() - sizeof(quint16));
+                broadcast(replyBlock, nullptr);
+
+                if (gameController) {
+                    emit gameController->messageReceived(senderId, senderName, text);
                 }
+            } else {
+                QString senderName;
+                QString text;
+                in >> senderName >> text;
+                if (gameController) {
+                    emit gameController->messageReceived(-1, senderName, text);
+                }
+            }
             break;
+        }
+            case NetworkTypes::Draw_: {
+                DrawCommand cmd;
+                in >> cmd;
+                if (gameController) {
+                    emit gameController->drawCommandReceived(cmd);
+                }
+                if (server_) {
+                    QByteArray drawBlock;
+                    QDataStream drawOut(&drawBlock, QIODevice::WriteOnly);
+                    drawOut.setVersion(QDataStream::Qt_6_0);
+                    drawOut << quint16(0) << static_cast<quint8>(NetworkTypes::Draw_) << cmd;
+                    drawOut.device()->seek(0);
+                    drawOut << static_cast<quint16>(drawBlock.size() - sizeof(quint16));
+                    broadcast(drawBlock, clientSocket); 
+                }
+                break;
             }
             case NetworkTypes::State_: {
-                GameState state;
-                in >> state;
-                emit gameStateReceived(state);
-                if(server_){
-                QByteArray buffer;
-                QDataStream out(&buffer, QIODevice::WriteOnly);
-                out.setVersion(QDataStream::Qt_6_0);
-                out << quint16(0) << static_cast<quint8>(NetworkTypes::State_) << state;
-                out.device()->seek(0);
-                out << quint16(buffer.size() - sizeof(quint16));
-                broadcast(buffer, clientSocket);
+                GameState newState;
+                in >> newState;
+                if (!server_) {
+                    emit gameStateReceivedFromNetwork(newState);
                 }
-            break;
-            }
-            default: {
-                clientSocket->readAll();
-                nextBlockSize = 0;
-                return;
+                break;
             }
         }
         nextBlockSize = 0;
@@ -179,7 +214,7 @@ void NetworkManager::sendState(const GameState& state){
     }
 }
 
-void NetworkManager::sendMessage(const QString& text){
+void NetworkManager::sendMessage(const QString& text) {
     QByteArray block;
     QDataStream out(&block, QIODevice::WriteOnly);
     out.setVersion(QDataStream::Qt_6_0);
@@ -188,13 +223,36 @@ void NetworkManager::sendMessage(const QString& text){
     out.device()->seek(0);
     quint16 actualSize = static_cast<quint16>(block.size() - sizeof(quint16));
     out << actualSize;
-    if(!server_){
-        if(socket_ && socket_->state() == QAbstractSocket::ConnectedState) {
+
+    if (!server_) {
+        if (socket_ && socket_->state() == QAbstractSocket::ConnectedState) {
             socket_->write(block);
             socket_->flush();
         }
-    }
-    else{
+    } else {
         broadcast(block, nullptr);
+    }
+}
+
+void NetworkManager::sendNickname(const QString& nickname){
+    QByteArray block;
+    QDataStream out(&block, QIODevice::WriteOnly);
+    out.setVersion(QDataStream::Qt_6_0);
+    out << quint16(0) << static_cast<quint8>(NetworkTypes::Nickname_) << nickname;
+    out.device()->seek(0);
+    quint16 actualSize = static_cast<quint16>(block.size() - sizeof(quint16));
+    out << actualSize;
+    if (!server_) {
+        if (socket_) {
+            if (socket_->state() == QAbstractSocket::ConnectedState) {
+                socket_->write(block);
+                socket_->flush();
+            } else {
+                connect(socket_, &QTcpSocket::connected, this, [this, block]() {
+                    socket_->write(block);
+                    socket_->flush();
+                }, Qt::SingleShotConnection);
+            }
+        }
     }
 }

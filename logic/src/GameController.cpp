@@ -2,12 +2,11 @@
 #include <QDebug>
 
 GameController::GameController(){
-
     chatController_   = new ChatController(state_, wordmanager_);
     drawController_   = new DrawController();
     playerController_ = new PlayerController(state_);
     roundController_  = new RoundController(state_, wordmanager_, roundmanager_);
-    networkManager_ = new NetworkManager(this);
+    networkManager_   = new NetworkManager(this);
 
     connect(chatController_, &ChatController::playerGuessedWord, this, [this](int playerId, int scoreBonus) {
         Player& ply = playerController_->getPlayerById(playerId);
@@ -27,10 +26,8 @@ GameController::GameController(){
     connect(chatController_, &ChatController::openedLettersMayHaveChanged, 
             roundController_, &RoundController::onOpenedLettersUpdate);
 
-
     connect(playerController_, &PlayerController::playerAdded, this, &GameController::playerAdded);
     connect(playerController_, &PlayerController::playerScoreChanged, this, &GameController::playerScoreChanged);
-    connect(playerController_, &PlayerController::playersUpdated, this, &GameController::playersUpdated);
 
     connect(chatController_, &ChatController::messageReceived, this, &GameController::messageReceived);
     connect(chatController_, &ChatController::chatUpdated, this, &GameController::chatUpdated);
@@ -39,6 +36,16 @@ GameController::GameController(){
     
     connect(playerController_, &PlayerController::playersUpdated, this, &GameController::playersUpdated);
     connect(chatController_, &ChatController::playersUpdated, this, &GameController::playersUpdated);
+
+    connect(drawController_, &DrawController::drawCommandReceived, this, [this](const DrawCommand& cmd) {
+            if (isServer_) {
+                emit drawCommandReceived(cmd); 
+                networkManager_->sendDraw(cmd);
+            } else {
+                networkManager_->sendDraw(cmd);
+            }
+        });
+
     connect(roundController_, &RoundController::explainerUpdated, this, &GameController::explainerUpdated);
     connect(roundController_, &RoundController::wordTimerUpdated, this, &GameController::wordTimerUpdated);
     connect(roundController_, &RoundController::roundStarted, this, &GameController::roundStarted);
@@ -53,10 +60,18 @@ GameController::GameController(){
     connect(roundController_, &RoundController::openedLettersUpdated, this, &GameController::openedLettersUpdated);
     connect(roundController_, &RoundController::wordsForChooseReady, this, &GameController::wordsForChooseReady);
     connect(roundController_, &RoundController::gameEnded, this, &GameController::gameEnded);
-    connect(networkManager_, &NetworkManager::gameStateReceived, this, [this](const GameState& newState) {
+    connect(networkManager_, &NetworkManager::gameStateReceivedFromNetwork, this, [this](const GameState& newState) {
         this->state_ = newState;
         emit playersUpdated();
         emit chatUpdated();
+    });
+    connect(networkManager_, &NetworkManager::clientIdAssigned, this, [this](int assignedId) {
+        if (!state_.players().isEmpty()) {
+            Player& localPlayer = state_.mutablePlayers().last();
+            localPlayer.setID(assignedId);
+            emit playersUpdated();
+            emit localPlayerIdAssigned(assignedId);
+        }
     });
 }
 
@@ -101,11 +116,16 @@ std::time_t GameController::getTimeLeft() {
 // NETWORK
 
 void GameController::startNetworkServer(quint16 port) {
-    networkManager_->startServer(port);
+    isServer_ = true;
+    QString hostName = state_.players().isEmpty() ? "Host" : state_.players().first().name();
+    networkManager_->startServer(port, hostName);
 }
 
-void GameController::connectToNetworkServer(const QString& ip, quint16 port) {
+void GameController::connectToNetworkServer(const QString& ip, quint16 port, const QString& nickname) {
+    isServer_ = false;
+    playerController_->createAndAddPlayer(nickname);
     networkManager_->connectToServer(ip, port);
+    networkManager_->sendNickname(nickname);
 }
 
 void GameController::sendChatMessage(const QString& text) {
@@ -118,5 +138,7 @@ void GameController::sendDrawCommand(const DrawCommand& cmd) {
 }
 
 void GameController::sendCurrentGameState() {
-    networkManager_->sendState(state_);
+    if (isServer_) {
+        networkManager_->sendState(state_);
+    }
 }
