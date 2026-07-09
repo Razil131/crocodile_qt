@@ -17,6 +17,7 @@ GameController::GameController(){
     
     connect(networkManager_, &NetworkManager::gameStateReceivedFromNetwork, this, [this](const GameState& newState) {
     bool isNewRound = (this->state_.RoundNum() != newState.RoundNum());
+    bool isChoosing = newState.isChoosingWord();
     
     this->state_ = newState;
     
@@ -25,7 +26,12 @@ GameController::GameController(){
     emit openedLettersUpdated(state_.openedLetters());
     emit timerUpdated(getTimeLeft()); 
     
-    if (isNewRound) {
+    if (isChoosing) {
+        const auto& words = state_.wordsForChoose();
+        if (words.size() == 3) {
+            emit wordsForChooseReady(words[0], words[1], words[2]);
+        }
+    } else if (isNewRound) {
         emit roundStarted(state_.RoundNum(), state_.currentWord());
     }
 });
@@ -83,6 +89,11 @@ void GameController::setupServerLogic() {
     connect(roundController_, &RoundController::openedLettersUpdated, this, [this](const QList<QString>& openedLetters) {
         emit openedLettersUpdated(openedLetters);
         sendCurrentGameState();
+    });
+
+    connect(roundController_, &RoundController::wordsForChooseReady, this, [this](const QString& w1, const QString& w2, const QString& w3) {
+        emit wordsForChooseReady(w1, w2, w3);
+        sendCurrentGameState(); 
     });
 
     connect(roundController_, &RoundController::explainerUpdated, this, &GameController::explainerUpdated);
@@ -159,7 +170,7 @@ void GameController::selectWord(const QString& word) {
     if (isServer_) {
         roundController_->setWord(word);
     } else {
-        // networkManager_->sendSelectedWord(word); // TODO
+        networkManager_->sendSelectedWord(word); // TODO
     }
 }
 
@@ -170,9 +181,7 @@ void GameController::startGame() {
 }
 
 void GameController::sendDrawCommand(const DrawCommand& cmd) {
-    if (isServer_) {
-        emit drawCommandReceived(cmd);
-    }
+    emit drawCommandReceived(cmd);
     networkManager_->sendDraw(cmd);
 }
 
@@ -186,5 +195,15 @@ void GameController::processNetworkChatMessage(int senderId, const QString& text
     if (isServer_) {
         Player& player = playerController_->getPlayerById(senderId);
         chatController_->sendMessage(player, text); 
+    }
+}
+
+void GameController::processNetworkWordSelection(int senderId, const QString& word) {
+    if (isServer_) {
+        if (senderId == state_.explainerID()) {
+            roundController_->setWord(word);
+        } else {
+            qDebug() << "error word selection";
+        }
     }
 }

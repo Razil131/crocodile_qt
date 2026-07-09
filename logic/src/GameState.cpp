@@ -12,7 +12,9 @@ QDataStream &operator<<(QDataStream &out, const GameState &state) {
         << state.openedLetters()   
         << qint32(state.alreadyOpenedLetters())
         << qint32(state.countLettersToOpen())
-        << qint32(state.letterTimeInterval());
+        << qint32(state.letterTimeInterval())
+        << state.isChoosingWord()
+        << state.wordsForChoose();
         
     return out;
 }
@@ -29,6 +31,8 @@ QDataStream &operator>>(QDataStream &in, GameState &state) {
     qint32 alreadyOpenedLetters;
     qint32 countLettersToOpen;
     qint32 letterTimeInterval;
+    bool isChoosingWord;
+    QList<QString> wordsForChoose;
 
     in >> roundEndTime 
        >> players 
@@ -40,7 +44,9 @@ QDataStream &operator>>(QDataStream &in, GameState &state) {
        >> openedLetters 
        >> alreadyOpenedLetters 
        >> countLettersToOpen 
-       >> letterTimeInterval;
+       >> letterTimeInterval
+       >> isChoosingWord
+       >> wordsForChoose;
 
     state.setRoundEndTime(static_cast<std::time_t>(roundEndTime));
     state.mutablePlayers() = players;
@@ -53,6 +59,8 @@ QDataStream &operator>>(QDataStream &in, GameState &state) {
     state.setAlreadyOpenedLetters(alreadyOpenedLetters);
     state.setCountLettersToOpen(countLettersToOpen);
     state.setLetterTimeInterval(letterTimeInterval);
+    state.setIsChoosingWord(isChoosingWord);
+    state.setWordsForChoose(wordsForChoose);
 
     return in;
 }

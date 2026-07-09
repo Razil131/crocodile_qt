@@ -32,6 +32,7 @@ public:
     void sendNickname(const QString& nickname);
     void broadcast(const QByteArray &bytes, QTcpSocket* sender);
     void sendBroadcastMessage(const QString& senderName, const QString& text);
+    void sendSelectedWord(const QString& word);
 
 signals:
     void nicknameReceivedFromNetwork(QTcpSocket* clientSocket, const QString& nickname);

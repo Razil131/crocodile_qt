@@ -125,6 +125,15 @@ void NetworkManager::onReadyRead() {
                 }
                 break;
             }
+            case NetworkTypes::WordSelected_: {
+                QString word;
+                in >> word;
+                if (server_ && gameController) {
+                    int senderId = clientIds_.value(clientSocket, -1);
+                    gameController->processNetworkWordSelection(senderId, word);
+                }
+                break;
+            }
         }
         nextBlockSize = 0;
     }
@@ -258,6 +267,23 @@ void NetworkManager::sendNickname(const QString& nickname){
                     socket_->flush();
                 }, Qt::SingleShotConnection);
             }
+        }
+    }
+}
+
+void NetworkManager::sendSelectedWord(const QString& word) {
+    QByteArray block;
+    QDataStream out(&block, QIODevice::WriteOnly);
+    out.setVersion(QDataStream::Qt_6_0);
+    out << quint16(0) << static_cast<quint8>(NetworkTypes::WordSelected_) << word;
+    out.device()->seek(0);
+    quint16 actualSize = static_cast<quint16>(block.size() - sizeof(quint16));
+    out << actualSize;
+
+    if (!server_) {
+        if (socket_ && socket_->state() == QAbstractSocket::ConnectedState) {
+            socket_->write(block);
+            socket_->flush();
         }
     }
 }

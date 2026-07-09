@@ -75,4 +75,5 @@ public:
     void sendDrawCommand(const DrawCommand& cmd);
     void sendCurrentGameState();
     void processNetworkChatMessage(int senderId, const QString& text);
+    void processNetworkWordSelection(int senderId, const QString& word);
 };

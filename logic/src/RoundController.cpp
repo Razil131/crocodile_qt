@@ -30,6 +30,8 @@ void RoundController::startWordChooseAndRound()
     wordTimeLeft_ = 10;
     wordChosen_ = false;
     currentWords_ = wordManager_.chooseWords();
+    state_.setWordsForChoose(currentWords_);
+    state_.setIsChoosingWord(true);
     emit wordsForChooseReady(currentWords_[0],currentWords_[1],currentWords_[2]);
     if (!wordTimer_->isActive()){
         wordTimer_->start(1000);
@@ -39,6 +41,7 @@ void RoundController::startWordChooseAndRound()
 void RoundController::setWord(const QString& word){
     if (wordChosen_) return;
     wordChosen_ = true;
+    state_.setIsChoosingWord(false);
     wordManager_.setCurrentWord(state_,word);
     wordTimer_->stop();
     roundManager_.startNewRound(state_);
