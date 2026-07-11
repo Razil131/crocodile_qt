@@ -49,7 +49,7 @@ TEST_F(GameControllerTest, VerifiesSignalForwardingFromSubControllers) {
 
 
 // ПОДСЧЕТ ОЧКОВ ПРИ УГАДЫВАНИИ
-
+// TODO починить
 
 // TEST_F(GameControllerTest, PlayerGuessedWordUpdatesScoresForPlayerAndExplainer) {
 //     std::vector<int> capturedIds;
