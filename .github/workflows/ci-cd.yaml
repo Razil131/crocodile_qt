@@ -80,7 +80,8 @@ jobs:
         run: |
           cqtdeployer -bin dist/Crocodile -lib dist/crocodile_back.so -targetDir dist_packaged
           rm -rf dist
-          mv dist_packaged/tmp_data/Application dist
+          ls -a dist_packaged/
+          mv dist_packaged/Application dist
           tar -czf crocodile-ubuntu.tar.gz -C dist .
 
       - name: upload artifact
