@@ -78,8 +78,9 @@ jobs:
       - name: pack linux
         if: matrix.os == 'ubuntu-24.04'
         run: |
-          cqtdeployer -bin dist/Crocodile -lib dist/crocodile_back.so -targetDir dist_packaged
-          rm -rf dist && mv dist_packaged/Distribution dist
+          cqtdeployer -bin dist/Crocodile -lib dist/crocodile_back.so -targetDir dist_packaged -clear
+          rm -rf dist
+          mv dist_packaged/Application dist
           tar -czf crocodile-ubuntu.tar.gz -C dist .
 
       - name: upload artifact
