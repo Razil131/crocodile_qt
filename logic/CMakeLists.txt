@@ -32,9 +32,9 @@ set(SOURCE_FILE
     ./include/NetworkManager.hpp
 )
 
-include_directories(${CMAKE_SOURCE_DIR}/include)
-
 add_library(crocodile_back SHARED ${SOURCE_FILE})
+
+target_include_directories(crocodile_back PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
 
 target_compile_definitions(crocodile_back PRIVATE CROCODILE_BACK_LIBRARY)
 
@@ -47,13 +47,12 @@ target_link_libraries(crocodile_back
     Qt6::Network
 )
 
-return()
-
 include(FetchContent)
 
 FetchContent_Declare(
     googletest
     URL https://github.com/google/googletest/archive/refs/tags/v1.14.0.zip
+    DOWNLOAD_EXTRACT_TIMESTAMP TRUE
 )
 
 set(gtest_force_shared_crt ON CACHE BOOL "" FORCE)
@@ -98,4 +97,4 @@ target_link_libraries(run_project_tests
 
 enable_testing()
 include(GoogleTest)
-gtest_discover_tests(run_project_tests)
+gtest_discover_tests(run_project_tests DISCOVERY_MODE PRE_TEST)

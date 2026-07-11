@@ -1,0 +1,108 @@
+name: build-and-package
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  build:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            arch: win64_msvc2019_64 
+            out: crocodile-windows
+            archive: crocodile-windows.zip
+          - os: ubuntu-24.04
+            arch: gcc_64
+            out: crocodile-ubuntu
+            archive: crocodile-ubuntu.tar.gz
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: apt deps
+        if: matrix.os == 'ubuntu-24.04'
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y build-essential libgl1-mesa-dev libxkbcommon-dev libegl1-mesa-dev xorg-dev
+
+      - name: setup qt
+        uses: jurplel/install-qt-action@v3
+        with:
+          version: '6.6.2'
+          arch: ${{ matrix.arch }}
+          cache: true
+
+      - name: build project
+        run: |
+          cmake -B build -S . -DCMAKE_BUILD_TYPE=Release
+          cmake --build build --config Release
+
+      - name: pack win
+        if: matrix.os == 'windows-latest'
+        shell: bash
+        run: |
+          mkdir dist
+          cp build/Release/Crocodile.exe dist/
+          cp build/logic/Release/crocodile_back.dll dist/
+          windeployqt --dir dist dist/Crocodile.exe
+          cd dist && 7z a ../crocodile-windows.zip *
+
+      - name: prepare linux asset
+        if: matrix.os == 'ubuntu-24.04'
+        run: |
+          mkdir dist
+          cp build/Crocodile dist/
+          cp build/logic/crocodile_back.so dist/
+
+      - name: install CqtDeployer
+        if: matrix.os == 'ubuntu-24.04'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          gh release download --repo QuasarApp/CQtDeployer --pattern "*.deb"
+          sudo apt install -y ./CQtDeployer*.deb
+
+      - name: pack linux
+        if: matrix.os == 'ubuntu-24.04'
+        run: |
+          cqtdeployer -bin dist/Crocodile -lib dist/crocodile_back.so -targetDir dist_packaged
+          rm -rf dist
+          mv dist_packaged dist
+          tar -czf crocodile-ubuntu.tar.gz -C dist .
+
+      - name: upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.out }}
+          path: dist/
+
+
+      - name: upload to github release
+        if: github.event_name == 'push'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: "v0.0.${{ github.run_number }}"
+          name: "Automatic build #${{ github.run_number }}"
+          body: |
+            Автоматический релиз для коммита ${{ github.sha }}
+            Ветка: ${{ github.ref_name }}
+          draft: false
+          prerelease: false
+          files: ${{ matrix.archive }}
+
+
+
+
+
+
