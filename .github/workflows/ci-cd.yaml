@@ -19,11 +19,11 @@ jobs:
           - os: windows-latest
             arch: win64_msvc2019_64 
             out: crocodile-windows
-            archive: crocodile-windows.zip
+            ext: zip
           - os: ubuntu-24.04
             arch: gcc_64
             out: crocodile-ubuntu
-            archive: crocodile-ubuntu.tar.gz
+            ext: tar.gz
 
     steps:
       - uses: actions/checkout@v4
@@ -48,6 +48,10 @@ jobs:
           cmake -B build -S . -DCMAKE_BUILD_TYPE=Release
           cmake --build build --config Release
 
+      - name: run tests
+        run: |
+          ctest --test-dir build -C Release --output-on-failure
+
       - name: pack win
         if: matrix.os == 'windows-latest'
         shell: bash
@@ -56,7 +60,10 @@ jobs:
           cp build/Release/Crocodile.exe dist/
           cp build/logic/Release/crocodile_back.dll dist/
           windeployqt --dir dist dist/Crocodile.exe
-          cd dist && 7z a ../crocodile-windows.zip *
+          FOLDER_NAME="${{ matrix.out }}-v0.0.${{ github.run_number }}"
+          mkdir -p packed/$FOLDER_NAME
+          cp -r dist/* packed/$FOLDER_NAME/
+          cd packed && 7z a ../$FOLDER_NAME.zip $FOLDER_NAME
 
       - name: prepare linux asset
         if: matrix.os == 'ubuntu-24.04'
@@ -78,14 +85,16 @@ jobs:
         run: |
           cqtdeployer -bin dist/Crocodile -lib dist/crocodile_back.so -targetDir dist_packaged
           rm -rf dist
-          mv dist_packaged dist
-          tar -czf crocodile-ubuntu.tar.gz -C dist .
+          FOLDER_NAME="${{ matrix.out }}-v0.0.${{ github.run_number }}"
+          mkdir packed
+          mv dist_packaged packed/$FOLDER_NAME
+          tar -czf $FOLDER_NAME.tar.gz -C packed $FOLDER_NAME
 
       - name: upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.out }}
-          path: dist/
+          name: ${{ matrix.out }}-v0.0.${{ github.run_number }}
+          path: packed/
 
 
       - name: upload to github release
@@ -99,7 +108,7 @@ jobs:
             Ветка: ${{ github.ref_name }}
           draft: false
           prerelease: false
-          files: ${{ matrix.archive }}
+          files: "${{ matrix.out }}-v0.0.${{ github.run_number }}.${{ matrix.ext }}"
 
 
 
