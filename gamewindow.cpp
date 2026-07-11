@@ -12,8 +12,6 @@ GameWindow::GameWindow(GameController* ctrl, QWidget *parent)
 
     connect(ui->InputChat, &QLineEdit::returnPressed, this, &GameWindow::on_EnterChat_released);
 
-    ui->IPLabel->setText("IP: " + controller->getIP());
-
     pressTimer = new QTimer(this);
     pressTimer->setInterval(100);
 
@@ -64,7 +62,8 @@ void GameWindow::setPlayer(int assignedId) {
     ui->BrushSizeSlider->setEnabled(isMeExplainer);
 
     if (!isMeExplainer) {
-        ui->StartGameButton->hide();
+        ui->StartGameButton->setEnabled(0);
+        ui->StartGameButton->setText("Ожидание хоста...");
     } else {
         if (controller->getRound() == 0) {
             ui->StartGameButton->show();
@@ -369,4 +368,12 @@ void GameWindow::tableInChat(){
         ui->ChatList->addItem(output);
     }
     ui->ChatList->scrollToBottom();
+}
+
+void GameWindow::setHostMode(bool isHost) {
+    ui->IPLabel->setVisible(isHost);
+}
+
+void GameWindow::updateIPlabel(){
+    ui->IPLabel->setText(controller->getIPandPort());
 }

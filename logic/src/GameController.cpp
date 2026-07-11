@@ -16,6 +16,7 @@ GameController::GameController(){
     connect(chatController_, &ChatController::playersUpdated, this, &GameController::playersUpdated);
     
     connect(networkManager_, &NetworkManager::gameStateReceivedFromNetwork, this, [this](const GameState& newState) {
+    qDebug() << "Client received state, wordChooseTimeLeft:" << newState.wordChooseTimeLeft();
     bool isNewRound = (this->state_.RoundNum() != newState.RoundNum());
     bool isChoosing = newState.isChoosingWord();
     
@@ -27,6 +28,7 @@ GameController::GameController(){
     emit timerUpdated(getTimeLeft()); 
     
     if (isChoosing) {
+        emit wordTimerUpdated(state_.wordChooseTimeLeft());
         const auto& words = state_.wordsForChoose();
         if (words.size() == 3) {
             emit wordsForChooseReady(words[0], words[1], words[2]);
@@ -100,6 +102,12 @@ void GameController::setupServerLogic() {
     connect(roundController_, &RoundController::wordTimerUpdated, this, &GameController::wordTimerUpdated);
     connect(roundController_, &RoundController::wordsForChooseReady, this, &GameController::wordsForChooseReady);
     connect(roundController_, &RoundController::gameEnded, this, &GameController::gameEnded);
+
+    connect(roundController_, &RoundController::wordTimerUpdated, this, [this](std::time_t timeLeft) {
+        qDebug() << "Timer tick:" << timeLeft;
+        emit wordTimerUpdated(timeLeft);
+        sendCurrentGameState();
+    });
 }
 
 const QList<std::pair<QString, QString>>& GameController::getChatHistory() const {
@@ -119,8 +127,12 @@ QList<QString> GameController::getOpenedLetters() {
     return state_.openedLetters();
 }
 
-QString GameController::getIP() {
-    return "255.255.255.255:65535"; // TODO: Сюда можно будет прикрутить реальный адрес QHostAddress
+QString GameController::getIPandPort() {
+    QString ip = networkManager_->getIP();
+    quint16 port = getPort();
+    QString result ="IP: " + ip + ":" + QString::number(port);
+    qDebug() << port;
+    return result;
 }
 
 int GameController::getRound() {
@@ -147,11 +159,16 @@ void GameController::startNetworkServer(quint16 port) {
     setupServerLogic(); 
     QString hostName = state_.players().isEmpty() ? "Host" : state_.players().first().name();
     networkManager_->startServer(port, hostName);
+    networkManager_->setPort(port);
 }
 
 void GameController::connectToNetworkServer(const QString& ip, quint16 port, const QString& nickname) {
     isServer_ = false;
     playerController_->createAndAddPlayer(nickname);
+    
+    connect(networkManager_, &NetworkManager::connectionEstablished, this, &GameController::connectionSucceeded);
+    connect(networkManager_, &NetworkManager::connectionFailed, this, &GameController::connectionFailed);
+
     networkManager_->connectToServer(ip, port);
     networkManager_->sendNickname(nickname);
 }
@@ -170,7 +187,7 @@ void GameController::selectWord(const QString& word) {
     if (isServer_) {
         roundController_->setWord(word);
     } else {
-        networkManager_->sendSelectedWord(word); // TODO
+        networkManager_->sendSelectedWord(word);
     }
 }
 

@@ -5,6 +5,7 @@
 #include <QtNetwork/QHostAddress>
 #include <QtCore/QDebug>
 #include <QtCore/QDataStream>
+#include <QNetworkInterface>
 
 void NetworkManager::startServer(quint16 port, const QString& hostNickname) {
     hostNickname_ = hostNickname;
@@ -180,9 +181,11 @@ void NetworkManager::connectToServer(QString ip_adress, quint16 port) {
     connect(socket_, &QTcpSocket::disconnected, this, [this, currentSocket]() {
         nextBlockSizes_.remove(currentSocket);
     });
-    
-    connect(socket_, &QTcpSocket::errorOccurred, this, [](QAbstractSocket::SocketError error) {
+
+    connect(socket_, &QTcpSocket::connected, this, &NetworkManager::connectionEstablished);
+    connect(socket_, &QTcpSocket::errorOccurred, this, [this](QAbstractSocket::SocketError error) {
         qDebug() << "Ошибка сокета клиента:" << error;
+        emit connectionFailed(socket_->errorString());
     });
 
     socket_->connectToHost(ip_adress, port);
@@ -286,4 +289,24 @@ void NetworkManager::sendSelectedWord(const QString& word) {
             socket_->flush();
         }
     }
+}
+
+QString NetworkManager::getIP(){
+    const QList<QHostAddress> ipAddressesList = QNetworkInterface::allAddresses();
+    for (const QHostAddress &address : ipAddressesList) {
+        if (address.protocol() == QAbstractSocket::IPv4Protocol && address != QHostAddress(QHostAddress::LocalHost)) {
+            return address.toString();
+        }
+    }
+    return QHostAddress(QHostAddress::LocalHost).toString(); 
+}
+
+quint16 NetworkManager::getPort(){
+    return port_;
+}
+
+void NetworkManager::setPort(quint16 port){
+    qDebug() << "netwmanager port" << port;
+    port_ = port;
+    qDebug() << "final port" << port_;
 }

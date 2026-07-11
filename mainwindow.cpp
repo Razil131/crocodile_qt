@@ -34,6 +34,9 @@ void MainWindow::on_createButton_clicked()
     if (c_dialog.exec() == QDialog::Accepted) {
         localController->startNetworkServer(c_dialog.port);
         g->show();
+        g->setHostMode(true);
+        localController->setPort(c_dialog.port);
+        g->updateIPlabel();
     }
     else {
         delete g;
@@ -43,24 +46,28 @@ void MainWindow::on_createButton_clicked()
 void MainWindow::on_connectButton_clicked()
 {
     JoinDialog j_dialog(this);
-
-    GameController* localController = new GameController();
-    GameWindow *g = new GameWindow(localController, this);
-
-    localController->setParent(g);
-
     QString capturedNickname;
     connect(&j_dialog, &JoinDialog::nicknameEntered, this, [&capturedNickname](const QString& nickname) {
         capturedNickname = nickname;
     });
 
+    if (j_dialog.exec() != QDialog::Accepted) return;
+
+    GameController* localController = new GameController();
+    GameWindow *g = new GameWindow(localController, this);
+    localController->setParent(g);
+
     connect(localController, &GameController::localPlayerIdAssigned, g, &GameWindow::setPlayer);
 
-    if (j_dialog.exec() == QDialog::Accepted) {
-        localController->connectToNetworkServer(j_dialog.IP, j_dialog.port, capturedNickname);
+    connect(localController, &GameController::connectionSucceeded, this, [g]() {
+        g->setHostMode(false);
         g->show();
-    }
-    else {
-        delete g;
-    }
+    });
+
+    connect(localController, &GameController::connectionFailed, this, [this, g](const QString& error) {;
+        g->close();
+        g->deleteLater();
+    });
+
+    localController->connectToNetworkServer(j_dialog.IP, j_dialog.port, capturedNickname);
 }

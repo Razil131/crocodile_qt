@@ -21,6 +21,7 @@ private:
     QHash<QTcpSocket*, int> clientIds_;
     QVector<QTcpSocket*> clients_;
     QString hostNickname_;
+    quint16 port_ = 8888;
 
 public:
     explicit NetworkManager(QObject *parent = nullptr) : QObject(parent) {}
@@ -33,6 +34,9 @@ public:
     void broadcast(const QByteArray &bytes, QTcpSocket* sender);
     void sendBroadcastMessage(const QString& senderName, const QString& text);
     void sendSelectedWord(const QString& word);
+    QString getIP();
+    quint16 getPort();
+    void setPort(quint16 port);
 
 signals:
     void nicknameReceivedFromNetwork(QTcpSocket* clientSocket, const QString& nickname);
@@ -40,6 +44,8 @@ signals:
     void drawCommandReceivedFromNetwork(const DrawCommand& cmd);
     void gameStateReceivedFromNetwork(const GameState& newState);
     void clientIdAssigned(int assignedId);
+    void connectionEstablished();
+    void connectionFailed(const QString& errorString);
 
 private slots:
     void newConnection();

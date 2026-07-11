@@ -27,6 +27,8 @@ private:
 
     bool isServer_ = false;
 
+    quint16 port_;
+
 signals:
     void playerAdded(int playerId, const QString& name);
     void playersUpdated();
@@ -46,6 +48,8 @@ signals:
     void wordsForChooseReady(const QString& w1, const QString& w2, const QString& w3);
     void gameEnded();
     void localPlayerIdAssigned(int id);
+    void connectionSucceeded();
+    void connectionFailed(const QString& error);
 
 public:
     GameController();
@@ -59,13 +63,15 @@ public:
     const QList<Player>& getPlayers();
     int getRoundTime();
     QList<QString> getOpenedLetters();
-    QString getIP();
+    QString getIPandPort();
     int getRound();
     int getRoundCount();
     QString getWord();
     void selectWord(const QString& word);
     void startGame();
     std::time_t getTimeLeft();
+    quint16 getPort(){return port_;}
+    void setPort(quint16 port){port_ = port;}
 
     // NETWORKING
     void setupServerLogic();

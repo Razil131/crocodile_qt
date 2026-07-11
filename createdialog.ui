@@ -55,10 +55,10 @@ color: black;</string>
     </rect>
    </property>
    <property name="minimum">
-    <number>1</number>
+    <number>2</number>
    </property>
    <property name="maximum">
-    <number>5</number>
+    <number>8</number>
    </property>
   </widget>
   <widget class="QLineEdit" name="NickInput">

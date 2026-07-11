@@ -32,6 +32,7 @@ private:
     int letterTimeInterval_;
     bool isChoosingWord_ = false;
     QList<QString> wordsForChoose_;
+    int wordChooseTimeLeft_ = 0;
 public:
 
     GameState();
@@ -76,8 +77,12 @@ public:
 
     bool isChoosingWord() const { return isChoosingWord_; }
     void setIsChoosingWord(bool v) { isChoosingWord_ = v; }
+    
     const QList<QString>& wordsForChoose() const { return wordsForChoose_; }
     void setWordsForChoose(const QList<QString>& w) { wordsForChoose_ = w; }
+
+    int wordChooseTimeLeft() const { return wordChooseTimeLeft_; }
+    void setWordChooseTimeLeft(int t) { wordChooseTimeLeft_ = t; }
 };
 
 CROCODILE_BACK_EXPORT QDataStream &operator<<(QDataStream &out, const GameState &state);

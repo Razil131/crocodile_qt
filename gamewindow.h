@@ -26,6 +26,8 @@ public:
 
     void setPlayer(int assignedId); // теперь передаем просто назначенный ID
     int getPlayerID() const { return playerId_; }
+    void setHostMode(bool isHost);
+    void updateIPlabel();
 
 private slots:
     void on_StartGameButton_clicked();
