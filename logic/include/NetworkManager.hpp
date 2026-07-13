@@ -24,7 +24,8 @@ private:
     quint16 port_ = 8888;
 
 public:
-    explicit NetworkManager(QObject *parent = nullptr) : QObject(parent) {}
+    explicit NetworkManager(QObject *parent = nullptr) 
+        : QObject(parent) {}
     void startServer(quint16 port, const QString& hostNickname);
     void connectToServer(QString ip_adress, quint16 port);
     void stopNetwork();

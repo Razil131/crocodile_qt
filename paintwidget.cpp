@@ -65,7 +65,7 @@ void PaintWidget::mouseMoveEvent(QMouseEvent *event) {
 }
 
 void PaintWidget::mouseReleaseEvent(QMouseEvent *event) {
-    if (!drawingEnabled) return;
+    if (!drawingEnabled || fillMode) return;
     DrawCommand cmd;
     cmd.type = DrawCommand::End;
     emit commandGenerated(cmd);
@@ -116,8 +116,12 @@ void PaintWidget::clearAll() {
 }
 
 void PaintWidget::executeCommand(DrawCommand cmd) {
+    if (isReplayingHistory) {
+        return;
+    }
     switch (cmd.type) {
     case DrawCommand::Start:
+        currentSnapshotBefore = canvas.copy();
         isDrawing = true;
         lastPoint = QPoint(cmd.x, cmd.y);
 
@@ -139,20 +143,86 @@ void PaintWidget::executeCommand(DrawCommand cmd) {
 
     case DrawCommand::End:
         isDrawing = false;
-        history.push_back(currentStroke);
+        {
+            PaintAction action;
+            action.type = PaintAction::StrokeAction;
+            action.stroke = currentStroke;
+            action.snapshotBefore = currentSnapshotBefore;
+            history.push_back(action);
+        }
         currentStroke.point_list.clear();
         break;
 
     case DrawCommand::Clear:
+        {
+        PaintAction action;
+        action.type = PaintAction::ClearAction;
+        action.snapshotBefore = canvas.copy();
+        history.push_back(action);
+
         canvas.fill(Qt::white);
-        history.clear();
         currentStroke.point_list.clear();
         isDrawing = false;
+        }
         break;
 
     case DrawCommand::Fill:
+        {
+        PaintAction action;
+        action.type = PaintAction::FillAction;
+        action.snapshotBefore = canvas.copy();
+        action.originalCommand = cmd;
+        history.push_back(action);
+
         applyFill(QPoint(cmd.x, cmd.y), cmd.color);
+        }
         break;
     }
     update();
+}
+
+void PaintWidget::undo(){
+    if (history.isEmpty() || !drawingEnabled) return;
+    PaintAction lastAction = history.takeLast();
+    canvas = lastAction.snapshotBefore;
+    update();
+    syncUndoToNetwork();
+}
+
+void PaintWidget::syncUndoToNetwork() {
+    QList<PaintAction> historyCopy = history;
+    isReplayingHistory = true;
+    DrawCommand clearCmd;
+    clearCmd.type = DrawCommand::Clear;
+    emit commandGenerated(clearCmd);
+    for (const auto& action : historyCopy) {
+        if (action.type == PaintAction::StrokeAction) {
+            if (action.stroke.point_list.isEmpty()) {
+                continue;
+            }
+            DrawCommand startCmd;
+            startCmd.type = DrawCommand::Start;
+            startCmd.x = action.stroke.point_list.first().x();
+            startCmd.y = action.stroke.point_list.first().y();
+            startCmd.color = action.stroke.color;
+            startCmd.width = action.stroke.width;
+            emit commandGenerated(startCmd);
+            for (int i = 1; i < action.stroke.point_list.size(); ++i) {
+                DrawCommand moveCmd;
+                moveCmd.type = DrawCommand::Move;
+                moveCmd.x = action.stroke.point_list[i].x();
+                moveCmd.y = action.stroke.point_list[i].y();
+                moveCmd.color = action.stroke.color;
+                moveCmd.width = action.stroke.width;
+                emit commandGenerated(moveCmd);
+            }
+            DrawCommand endCmd;
+            endCmd.type = DrawCommand::End;
+            emit commandGenerated(endCmd);
+        }
+        else if (action.type == PaintAction::FillAction) {
+            emit commandGenerated(action.originalCommand);
+        }
+    }
+    isReplayingHistory = false;
 }

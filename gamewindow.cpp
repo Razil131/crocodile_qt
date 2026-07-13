@@ -389,3 +389,14 @@ void GameWindow::closeEvent(QCloseEvent *event) {
     }
     event->accept();
 }
+
+void GameWindow::keyPressEvent(QKeyEvent *event) {
+    if (event->matches(QKeySequence::Undo) ||
+        (event->key() == Qt::Key_Z && (event->modifiers() & Qt::ControlModifier)))
+    {
+        if (controller->players()->isExplainerByID(playerId_)) {
+            ui->Canvas->undo();
+        }
+    }
+    QMainWindow::keyPressEvent(event);
+}

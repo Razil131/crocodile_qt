@@ -3,7 +3,13 @@
 #include <QtCore/QtTypes>
 
 struct DrawCommand {
-    enum Type  : quint8 { Start, Move, End, Clear, Fill };
+    enum Type  : quint8 { 
+        Start, 
+        Move, 
+        End, 
+        Clear, 
+        Fill 
+    };
     Type type;
     int x, y;
     QColor color;

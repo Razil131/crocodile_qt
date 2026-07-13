@@ -28,10 +28,14 @@ public:
     void setDrawingEnabled(bool enabled) { drawingEnabled = enabled; }
     bool isDrawingEnabled() const { return drawingEnabled; }
     void executeCommand(DrawCommand cmd);
+    void undo();
+    void syncUndoToNetwork();
 
 private:
     Ui::PaintWidget *ui;
     bool drawingEnabled;
+    bool isReplayingHistory = false;
+    QImage currentSnapshotBefore;
     QColor currentColor = Qt::black;
     int currentWidth = 3;
 
@@ -41,7 +45,20 @@ private:
         int width;
     };
 
-    QList<Stroke> history;
+    struct PaintAction{
+        enum Type{
+            StrokeAction,
+            FillAction,
+            ClearAction
+        };
+        Type type;
+
+        Stroke stroke;
+        QImage snapshotBefore;
+        DrawCommand originalCommand;
+    };
+
+    QList<PaintAction> history;
     QImage canvas;
     bool isDrawing;
     bool fillMode;
