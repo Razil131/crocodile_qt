@@ -27,6 +27,7 @@ public:
     explicit NetworkManager(QObject *parent = nullptr) : QObject(parent) {}
     void startServer(quint16 port, const QString& hostNickname);
     void connectToServer(QString ip_adress, quint16 port);
+    void stopNetwork();
     void sendDraw(const DrawCommand& cmd);
     void sendMessage(const QString& text);
     void sendState(const GameState& state);
@@ -46,6 +47,7 @@ signals:
     void clientIdAssigned(int assignedId);
     void connectionEstablished();
     void connectionFailed(const QString& errorString);
+    void serverDisconnected();
 
 private slots:
     void newConnection();

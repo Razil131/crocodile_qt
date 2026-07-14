@@ -46,6 +46,8 @@ GameController::GameController(){
             emit localPlayerIdAssigned(assignedId);
         }
     });
+
+    connect(networkManager_, &NetworkManager::serverDisconnected, this, &GameController::serverDisconnected);
 }
 
 void GameController::setupServerLogic() {
@@ -223,4 +225,28 @@ void GameController::processNetworkWordSelection(int senderId, const QString& wo
             qDebug() << "error word selection";
         }
     }
+}
+
+bool GameController::isServer(){
+    return isServer_;
+}
+
+void GameController::shutdownNetwork() {
+    if (networkManager_) {
+        networkManager_->stopNetwork();
+    }
+}
+
+void GameController::processPlayerDisconnect(int playerId) {
+    if (!isServer_) return;
+
+    auto& players = state_.mutablePlayers();
+    for (auto it = players.begin(); it != players.end(); ++it) {
+        if (it->id() == playerId) {
+            players.erase(it);
+            break;
+        }
+    }
+    emit playersUpdated();
+    sendCurrentGameState();
 }

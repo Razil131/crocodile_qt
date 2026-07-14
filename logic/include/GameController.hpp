@@ -50,6 +50,7 @@ signals:
     void localPlayerIdAssigned(int id);
     void connectionSucceeded();
     void connectionFailed(const QString& error);
+    void serverDisconnected();
 
 public:
     GameController();
@@ -82,4 +83,7 @@ public:
     void sendCurrentGameState();
     void processNetworkChatMessage(int senderId, const QString& text);
     void processNetworkWordSelection(int senderId, const QString& word);
+    bool isServer();
+    void shutdownNetwork();
+    void processPlayerDisconnect(int playerId);
 };

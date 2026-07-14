@@ -2,6 +2,7 @@
 #include "ui_gamewindow.h"
 #include <QColorDialog>
 #include <QDebug>
+#include <QMessageBox>
 
 GameWindow::GameWindow(GameController* ctrl, QWidget *parent)
     : QMainWindow(parent)
@@ -28,6 +29,10 @@ GameWindow::GameWindow(GameController* ctrl, QWidget *parent)
 
     connect(ui->Canvas, &PaintWidget::commandGenerated, controller, &GameController::sendDrawCommand);
     connect(controller, &GameController::drawCommandReceived, ui->Canvas, &PaintWidget::executeCommand);
+    connect(controller, &GameController::serverDisconnected, this, [this]() {
+        QMessageBox::critical(this, "ERROR", "Потеряно соединение с сервером");
+        this->close();
+    });
 
     connect(pressTimer, &QTimer::timeout, this, [=]() {
         duration += 100;
@@ -376,4 +381,11 @@ void GameWindow::setHostMode(bool isHost) {
 
 void GameWindow::updateIPlabel(){
     ui->IPLabel->setText(controller->getIPandPort());
+}
+
+void GameWindow::closeEvent(QCloseEvent *event) {
+    if (controller) {
+        controller->shutdownNetwork();
+    }
+    event->accept();
 }

@@ -25,12 +25,34 @@ void NetworkManager::newConnection(){
         clients_.append(clientSocket);
         connect(clientSocket, &QTcpSocket::readyRead, this, &NetworkManager::onReadyRead);
         connect(clientSocket, &QTcpSocket::disconnected, this, [this, clientSocket]() {
+
+            int disconnectedId = clientIds_.value(clientSocket, -1);
+
             clients_.removeAll(clientSocket);
             clientSocket->deleteLater();
             nextBlockSizes_.remove(clientSocket);
             clientNames_.remove(clientSocket);
             clientIds_.remove(clientSocket);
+
+            auto* gameController = qobject_cast<GameController*>(parent());
+            if (gameController && disconnectedId != -1) {
+                gameController->processPlayerDisconnect(disconnectedId);
+            }
         });
+    }
+}
+
+void NetworkManager::stopNetwork() {
+    if (server_) {
+        for (QTcpSocket* client : clients_) {
+            if (client && client->state() == QAbstractSocket::ConnectedState) {
+                client->disconnectFromHost();
+            }
+        }
+        server_->close();
+    }
+    if (socket_) {
+        socket_->disconnectFromHost();
     }
 }
 
@@ -185,7 +207,11 @@ void NetworkManager::connectToServer(QString ip_adress, quint16 port) {
     connect(socket_, &QTcpSocket::connected, this, &NetworkManager::connectionEstablished);
     connect(socket_, &QTcpSocket::errorOccurred, this, [this](QAbstractSocket::SocketError error) {
         qDebug() << "Ошибка сокета клиента:" << error;
-        emit connectionFailed(socket_->errorString());
+        if (error == QAbstractSocket::RemoteHostClosedError) {
+            emit serverDisconnected();
+        } else {
+            emit connectionFailed(socket_->errorString());
+        }
     });
 
     socket_->connectToHost(ip_adress, port);
