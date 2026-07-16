@@ -49,63 +49,64 @@ TEST_F(GameControllerTest, VerifiesSignalForwardingFromSubControllers) {
 
 
 // ПОДСЧЕТ ОЧКОВ ПРИ УГАДЫВАНИИ
-// TODO починить
 
-// TEST_F(GameControllerTest, PlayerGuessedWordUpdatesScoresForPlayerAndExplainer) {
-//     std::vector<int> capturedIds;
-//     int nominatedExplainerId = -1;
+TEST_F(GameControllerTest, PlayerGuessedWordUpdatesScoresForPlayerAndExplainer) {
+    std::vector<int> capturedIds;
+    int nominatedExplainerId = -1;
 
-//     QObject::connect(gameController.get(), &GameController::playerAdded,
-//         [&](int playerId, const QString& name) {
-//             capturedIds.push_back(playerId);
-//         });
+    gameController->startNetworkServer(0);
 
-//     QObject::connect(gameController.get(), &GameController::explainerUpdated,
-//         [&](int newExplainerId) {
-//             nominatedExplainerId = newExplainerId;
-//         });
+    QObject::connect(gameController.get(), &GameController::playerAdded,
+        [&](int playerId, const QString& name) {
+            capturedIds.push_back(playerId);
+        });
 
-//     gameController->players()->createAndAddPlayer("ply1");
-//     gameController->players()->createAndAddPlayer("ply2");
-//     app->processEvents();
+    QObject::connect(gameController.get(), &GameController::explainerUpdated,
+        [&](int newExplainerId) {
+            nominatedExplainerId = newExplainerId;
+        });
 
-//     const auto& playersList = gameController->getPlayers();
-//     ASSERT_GE(playersList.size(), 2);
+    gameController->players()->createAndAddPlayer("ply1");
+    gameController->players()->createAndAddPlayer("ply2");
+    app->processEvents();
 
-//     int firstId = playersList[0].id();
-//     int secondId = playersList[1].id();
+    const auto& playersList = gameController->getPlayers();
+    ASSERT_GE(playersList.size(), 2);
 
-//     gameController->round()->startWordChooseAndRound();
-//     app->processEvents();
+    int firstId = playersList[0].id();
+    int secondId = playersList[1].id();
 
-//     if (nominatedExplainerId == -1) {
-//         nominatedExplainerId = firstId;
-//     }
-//     int guesserId = (firstId == nominatedExplainerId) ? secondId : firstId;
+    gameController->round()->startWordChooseAndRound();
+    app->processEvents();
 
-//     bool guesserScoreChanged = false;
-//     bool explainerScoreChanged = false;
+    if (nominatedExplainerId == -1) {
+        nominatedExplainerId = firstId;
+    }
+    int guesserId = (firstId == nominatedExplainerId) ? secondId : firstId;
 
-//     QObject::connect(gameController.get(), &GameController::playerScoreChanged,
-//         [&](int playerId, int newScore) {
-//             if (playerId == guesserId && newScore > 0) {
-//                 guesserScoreChanged = true;
-//             }
-//             if (playerId == nominatedExplainerId && newScore > 0) {
-//                 explainerScoreChanged = true;
-//             }
-//         });
+    bool guesserScoreChanged = false;
+    bool explainerScoreChanged = false;
 
-//     QMetaObject::invokeMethod(gameController->chat(), "playerGuessedWord",
-//                             Q_ARG(int, guesserId),
-//                             Q_ARG(int, 15));
+    QObject::connect(gameController.get(), &GameController::playerScoreChanged,
+        [&](int playerId, int newScore) {
+            if (playerId == guesserId && newScore > 0) {
+                guesserScoreChanged = true;
+            }
+            if (playerId == nominatedExplainerId && newScore > 0) {
+                explainerScoreChanged = true;
+            }
+        });
+
+    QMetaObject::invokeMethod(gameController->chat(), "playerGuessedWord",
+                            Q_ARG(int, guesserId),
+                            Q_ARG(int, 15));
     
-//     app->processEvents();
+    app->processEvents();
 
 
-//     EXPECT_TRUE(guesserScoreChanged);
-//     EXPECT_TRUE(explainerScoreChanged);
-// }
+    EXPECT_TRUE(guesserScoreChanged);
+    EXPECT_TRUE(explainerScoreChanged);
+}
 
 // ГЕТТЕРЫ-ФАСАДЫ
 

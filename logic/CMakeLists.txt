@@ -95,6 +95,5 @@ target_link_libraries(run_project_tests
     Qt6::Network
 )
 
-enable_testing()
 include(GoogleTest)
 gtest_discover_tests(run_project_tests DISCOVERY_MODE PRE_TEST)
