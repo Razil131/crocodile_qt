@@ -70,7 +70,7 @@ void RoundController::onWordTimerTick()
 {
     --wordTimeLeft_;
     state_.setWordChooseTimeLeft(wordTimeLeft_);
-    emit wordTimerUpdated(static_cast<std::time_t>(--wordTimeLeft_));
+    emit wordTimerUpdated(static_cast<std::time_t>(wordTimeLeft_));
 
     if (wordTimeLeft_ <= 0){
         wordTimer_->stop();
