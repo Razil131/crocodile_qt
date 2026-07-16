@@ -9,7 +9,8 @@ enum class NetworkTypes : quint8{
     State_,
     Nickname_,
     IdAssignment_,
-    WordSelected_
+    WordSelected_,
+    ConnectionRejected_
 };
 
 inline QDataStream& operator<<(QDataStream &out, const DrawCommand& cmd){

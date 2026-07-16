@@ -17,6 +17,7 @@ public:
     ~CreateDialog();
     void accept() override;
     int port;
+    int maxClients;
 
 signals:
     void nicknameEntered(const QString& nickname);

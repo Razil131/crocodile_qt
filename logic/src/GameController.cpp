@@ -48,6 +48,7 @@ GameController::GameController(){
     });
 
     connect(networkManager_, &NetworkManager::serverDisconnected, this, &GameController::serverDisconnected);
+    connect(networkManager_, &NetworkManager::connectionRejected, this, &GameController::connectionFailed);
 }
 
 void GameController::setupServerLogic() {
@@ -249,4 +250,8 @@ void GameController::processPlayerDisconnect(int playerId) {
     }
     emit playersUpdated();
     sendCurrentGameState();
+}
+
+void GameController::setMaxClients(int maxClients){
+    networkManager_->setMaxClients(maxClients);
 }

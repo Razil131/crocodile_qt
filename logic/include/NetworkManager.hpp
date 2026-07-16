@@ -22,6 +22,7 @@ private:
     QVector<QTcpSocket*> clients_;
     QString hostNickname_;
     quint16 port_ = 8888;
+    int max_clients_ = 2;
 
 public:
     explicit NetworkManager(QObject *parent = nullptr) 
@@ -39,6 +40,7 @@ public:
     QString getIP();
     quint16 getPort();
     void setPort(quint16 port);
+    void setMaxClients(int maxClients);
 
 signals:
     void nicknameReceivedFromNetwork(QTcpSocket* clientSocket, const QString& nickname);
@@ -49,6 +51,7 @@ signals:
     void connectionEstablished();
     void connectionFailed(const QString& errorString);
     void serverDisconnected();
+    void connectionRejected(const QString& reason);
 
 private slots:
     void newConnection();

@@ -22,6 +22,19 @@ void NetworkManager::startServer(quint16 port, const QString& hostNickname) {
 void NetworkManager::newConnection(){
     while (server_->hasPendingConnections()) {
         QTcpSocket* clientSocket = server_->nextPendingConnection();
+        if (clients_.size() >= max_clients_) {
+            QByteArray block;
+            QDataStream out(&block, QIODevice::WriteOnly);
+            out.setVersion(QDataStream::Qt_6_0);
+            out << quint16(0) << static_cast<quint8>(NetworkTypes::ConnectionRejected_) << QString("Сервер переполнен");
+            out.device()->seek(0);
+            out << static_cast<quint16>(block.size() - sizeof(quint16));
+            clientSocket->write(block);
+            clientSocket->flush();
+            connect(clientSocket, &QTcpSocket::disconnected, clientSocket, &QTcpSocket::deleteLater);
+            clientSocket->disconnectFromHost();
+            continue; 
+        }
         clients_.append(clientSocket);
         connect(clientSocket, &QTcpSocket::readyRead, this, &NetworkManager::onReadyRead);
         connect(clientSocket, &QTcpSocket::disconnected, this, [this, clientSocket]() {
@@ -156,6 +169,17 @@ void NetworkManager::onReadyRead() {
                     gameController->processNetworkWordSelection(senderId, word);
                 }
                 break;
+            }
+            case NetworkTypes::ConnectionRejected_: {
+            QString reason;
+            in >> reason;
+            if (!server_) {
+                emit connectionRejected(reason);
+                if (socket_) {
+                    socket_->disconnectFromHost();
+                }
+            }
+            break;
             }
         }
         nextBlockSize = 0;
@@ -335,4 +359,8 @@ void NetworkManager::setPort(quint16 port){
     qDebug() << "netwmanager port" << port;
     port_ = port;
     qDebug() << "final port" << port_;
+}
+
+void NetworkManager::setMaxClients(int maxClients){
+    max_clients_ = maxClients;
 }

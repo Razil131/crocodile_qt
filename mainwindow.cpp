@@ -32,6 +32,7 @@ void MainWindow::on_createButton_clicked()
     });
 
     if (c_dialog.exec() == QDialog::Accepted) {
+        localController->setMaxClients(c_dialog.maxClients);
         localController->startNetworkServer(c_dialog.port);
         g->show();
         g->setHostMode(true);

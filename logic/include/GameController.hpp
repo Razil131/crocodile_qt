@@ -73,6 +73,7 @@ public:
     std::time_t getTimeLeft();
     quint16 getPort(){return port_;}
     void setPort(quint16 port){port_ = port;}
+    void setMaxClients(int maxClients);
 
     // NETWORKING
     void setupServerLogic();

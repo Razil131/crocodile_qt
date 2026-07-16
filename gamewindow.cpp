@@ -97,8 +97,13 @@ QString GameWindow::getWordLabelStr(const QList<QString>& letters) {
 void GameWindow::on_StartGameButton_clicked()
 {
     if (controller->players()->isExplainerByID(playerId_)) {
-        ui->StartGameButton->hide();
-        controller->startGame();
+        if (controller->getPlayers().size() >= 2) {
+            ui->StartGameButton->hide();
+            controller->startGame();
+        } else {
+            ui->ChatList->addItem("Система: Недостаточно игроков для начала игры (минимум 2).");
+            ui->ChatList->scrollToBottom();
+        }
     }
 }
 

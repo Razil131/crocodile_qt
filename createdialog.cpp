@@ -24,5 +24,6 @@ void CreateDialog::accept()
 
     emit nicknameEntered(nickname);
     port = ui->PortSpinBox->value();
+    maxClients = ui->MaxPlayersSpinBox->value() - 1;
     QDialog::accept();
 }
