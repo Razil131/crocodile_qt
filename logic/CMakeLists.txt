@@ -31,7 +31,7 @@ set(SOURCE_FILE
     ./include/PlayerController.hpp
     ./include/NetworkTypes.hpp
     ./include/NetworkManager.hpp
-    resources.qrc
+    crocodile_resources.qrc
 )
 
 add_library(crocodile_back SHARED ${SOURCE_FILE})
