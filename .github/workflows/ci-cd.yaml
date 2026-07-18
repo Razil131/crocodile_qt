@@ -48,6 +48,14 @@ jobs:
           cmake -B build -S . -DCMAKE_BUILD_TYPE=Release
           cmake --build build --config Release
 
+      - name: copy dictionary for tests
+        shell: bash
+        run: |
+          cp russian.utf-8 build/
+
+          mkdir -p build/Release
+          cp russian.utf-8 build/Release/
+
       - name: run tests
         run: |
           ctest --test-dir build -C Release --output-on-failure
@@ -71,7 +79,7 @@ jobs:
         run: |
           mkdir dist
           cp build/Crocodile dist/
-          cp build/crocodile_back.so dist/
+          cp build/logic/crocodile_back.so dist/
 
       - name: install CqtDeployer
         if: matrix.os == 'ubuntu-24.04'
