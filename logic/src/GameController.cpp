@@ -133,7 +133,7 @@ QList<QString> GameController::getOpenedLetters() {
 QString GameController::getIPandPort() {
     QString ip = networkManager_->getIP();
     quint16 port = getPort();
-    QString result ="IP: " + ip + ":" + QString::number(port);
+    QString result ="IP " + ip + ":" + QString::number(port);
     qDebug() << port;
     return result;
 }

@@ -22,10 +22,10 @@ public:
     void mouseReleaseEvent(QMouseEvent *event) override;
     void setColor(const QColor c){currentColor = c;}
     void setWidth(int w) {currentWidth = w;}
-    void setFillMode(bool b){fillMode = b;}
+    void setFillMode(bool b){fillMode = b; updateCursor();}
     void applyFill(QPoint start, QColor fillColor);
     void clearAll();
-    void setDrawingEnabled(bool enabled) { drawingEnabled = enabled; }
+    void setDrawingEnabled(bool enabled) { drawingEnabled = enabled; updateCursor(); }
     bool isDrawingEnabled() const { return drawingEnabled; }
     void executeCommand(DrawCommand cmd);
     void undo();
@@ -67,11 +67,17 @@ private:
     void paintEvent(QPaintEvent *event) override;
     void drawStroke(QPainter &p, const Stroke &s);
     void drawLineOnCanvas(const QPoint &from, const QPoint &to, const QColor &color, int width);
+    void resizeEvent(QResizeEvent *event);
+    void updateCursor();
+
+protected:
+    void enterEvent(QEnterEvent *event) override;
 
 signals:
     void pointAdded(QPoint pos, QColor color, int width);
     void commandGenerated(DrawCommand cmd);
 
 };
+
 
 #endif // PAINTWIDGET_H

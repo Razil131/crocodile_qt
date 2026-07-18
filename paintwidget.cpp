@@ -7,11 +7,12 @@ PaintWidget::PaintWidget(QWidget *parent)
     , ui(new Ui::PaintWidget)
 {
     ui->setupUi(this);
-    canvas = QImage(500, 500, QImage::Format_RGB32);
+    canvas = QImage();
     canvas.fill(Qt::white);
     isDrawing = false;
     fillMode = false;
     drawingEnabled = false;
+    updateCursor();
 }
 
 PaintWidget::~PaintWidget()
@@ -225,4 +226,37 @@ void PaintWidget::syncUndoToNetwork() {
         }
     }
     isReplayingHistory = false;
+}
+
+void PaintWidget::resizeEvent(QResizeEvent *event) {
+    QWidget::resizeEvent(event);
+
+    if (canvas.size() != this->size() && !this->size().isEmpty()) {
+        QImage newCanvas(this->size(), QImage::Format_RGB32);
+        newCanvas.fill(Qt::white);
+
+        if (!canvas.isNull()) {
+            QPainter painter(&newCanvas);
+            painter.drawImage(0, 0, canvas);
+        }
+        canvas = newCanvas;
+    }
+}
+
+void PaintWidget::updateCursor() {
+    if (!drawingEnabled) {
+        setCursor(Qt::ArrowCursor);
+        return;
+    }
+
+    if (fillMode) {
+        setCursor(Qt::PointingHandCursor); 
+    } else {
+        setCursor(Qt::CrossCursor); 
+    }
+}
+
+void PaintWidget::enterEvent(QEnterEvent *event) {
+    QWidget::enterEvent(event);
+    updateCursor();
 }

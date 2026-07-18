@@ -6,6 +6,7 @@ CreateDialog::CreateDialog(QWidget *parent)
     , ui(new Ui::CreateDialog)
 {
     ui->setupUi(this);
+    setWindowTitle("Крокодил - Создать лобби");
 }
 
 CreateDialog::~CreateDialog()

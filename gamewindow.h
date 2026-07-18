@@ -21,6 +21,12 @@ public:
     explicit GameWindow(GameController* ctrl, QWidget *parent = nullptr);
     ~GameWindow();
 
+    enum class MsgType {
+        Info,
+        Success,
+        Warning
+    };
+
     QTimer *pressTimer;
     int duration = 0;
 
@@ -60,6 +66,7 @@ private:
     void playersTableUpdate();
     void tableCreate();
     void tableInChat();
+    void addSystemMessage(const QString& text, MsgType type = MsgType::Info);
 
     GameController* controller;
     int playerId_ = -1;

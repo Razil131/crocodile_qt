@@ -10,6 +10,7 @@ GameWindow::GameWindow(GameController* ctrl, QWidget *parent)
     , controller(ctrl)
 {
     ui->setupUi(this);
+    setWindowTitle("Крокодил");
 
     connect(ui->InputChat, &QLineEdit::returnPressed, this, &GameWindow::on_EnterChat_released);
 
@@ -106,7 +107,15 @@ void GameWindow::on_StartGameButton_clicked()
             ui->StartGameButton->hide();
             controller->startGame();
         } else {
-            ui->ChatList->addItem("Система: Недостаточно игроков для начала игры (минимум 2).");
+            QListWidgetItem* item = new QListWidgetItem("Система: Недостаточно игроков для начала игры (минимум 2).");
+            item->setForeground(QColor("#dc2626"));
+            item->setBackground(QColor("#fee2e2"));
+            
+            QFont font = item->font();
+            font.setBold(true);   
+            item->setFont(font);
+            
+            ui->ChatList->addItem(item);
             ui->ChatList->scrollToBottom();
         }
     }
@@ -124,7 +133,13 @@ void GameWindow::on_ChooseColorButton_clicked()
         QColor selectedColor = QColorDialog::getColor(Qt::black, this, "Выберите цвет");
         if (selectedColor.isValid()) {
             ui->Canvas->setColor(selectedColor);
-            ui->ChooseColorButton->setStyleSheet(QString("background-color: %1").arg(selectedColor.name()));
+            QString colorStyle = QString(
+                "background-color: %1; "
+                "border-radius: 20px; "
+                "border: 2px solid #e5e7eb;"
+            ).arg(selectedColor.name());
+
+            ui->ChooseColorButton->setStyleSheet(colorStyle);
         }
     }
 }
@@ -198,8 +213,13 @@ void GameWindow::chatUpdate() {
 }
 
 void GameWindow::onMessageReceived(int senderId, const QString& senderName, const QString& text) {
-    ui->ChatList->addItem(QString("%1: %2").arg(senderName, text));
-    ui->ChatList->scrollToBottom();
+    if (senderId == -1 || senderName == "Система") {
+        MsgType type = MsgType::Success;     
+        addSystemMessage(QString("%1: %2").arg(senderName, text), type);      
+    } else {
+        ui->ChatList->addItem(QString("%1: %2").arg(senderName, text));
+        ui->ChatList->scrollToBottom();
+    }
 }
 
 void GameWindow::on_Word1Label_clicked()
@@ -230,19 +250,42 @@ void GameWindow::playersTableUpdate() {
     const QList<Player>& players = controller->getPlayers();
     ui->PlayersTable->setRowCount(players.size());
 
-    for (size_t row = 0; row < players.size(); ++row) {
+    for (int row = 0; row < players.size(); ++row) {
         const auto& player = players[row];
+        bool isExplainer = controller->players()->isExplainer(player);
 
-        ui->PlayersTable->setItem(row, 0, new QTableWidgetItem(player.name()));
+        QTableWidgetItem* nameItem = new QTableWidgetItem(player.name());
+        
+        QString status = isExplainer ? "Рисующий" : "Игрок";
+        QTableWidgetItem* statusItem = new QTableWidgetItem(status);
+        
+        QTableWidgetItem* scoreItem = new QTableWidgetItem(QString::number(player.score()));
 
-        QString status = controller->players()->isExplainer(player) ? "Рисующий" : "Игрок";
-        ui->PlayersTable->setItem(row, 1, new QTableWidgetItem(status));
+        nameItem->setTextAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+        statusItem->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+        scoreItem->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
 
-        ui->PlayersTable->setItem(row, 2, new QTableWidgetItem(QString::number(player.score())));
+        if (isExplainer) {
+            QColor rowBg("#e0e7ff");
+            nameItem->setBackground(rowBg);
+            statusItem->setBackground(rowBg);
+            scoreItem->setBackground(rowBg);
 
-        ui->PlayersTable->item(row, 0)->setTextAlignment(Qt::AlignLeft | Qt::AlignTop);
-        ui->PlayersTable->item(row, 1)->setTextAlignment(Qt::AlignHCenter | Qt::AlignTop);
-        ui->PlayersTable->item(row, 2)->setTextAlignment(Qt::AlignRight | Qt::AlignTop);
+            statusItem->setForeground(QColor("#4f46e5"));
+            QFont font = statusItem->font();
+            font.setBold(true);
+            statusItem->setFont(font);
+            
+            nameItem->setFont(font);
+            scoreItem->setFont(font);
+        } else {
+            statusItem->setForeground(QColor("#4b5563"));
+        }
+
+        // 4. Заталкиваем элементы в таблицу
+        ui->PlayersTable->setItem(row, 0, nameItem);
+        ui->PlayersTable->setItem(row, 1, statusItem);
+        ui->PlayersTable->setItem(row, 2, scoreItem);
     }
     ui->PlayersTable->setUpdatesEnabled(true);
 }
@@ -263,9 +306,9 @@ void GameWindow::tableCreate() {
     ui->PlayersTable->verticalHeader()->setDefaultSectionSize(35);
     ui->PlayersTable->horizontalHeader()->setStretchLastSection(false);
     ui->PlayersTable->horizontalHeader()->setSectionsMovable(false);
-    ui->PlayersTable->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Stretch);
-    ui->PlayersTable->horizontalHeader()->setSectionResizeMode(1, QHeaderView::Fixed);
-    ui->PlayersTable->setColumnWidth(1, 80);
+    ui->PlayersTable->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Fixed);
+    ui->PlayersTable->setColumnWidth(0, 100); 
+    ui->PlayersTable->horizontalHeader()->setSectionResizeMode(1, QHeaderView::Stretch);
     ui->PlayersTable->horizontalHeader()->setSectionResizeMode(2, QHeaderView::Fixed);
     ui->PlayersTable->setColumnWidth(2, 60);
 }
@@ -354,7 +397,7 @@ void GameWindow::onRoundEnded() {
     ui->Canvas->setDrawingEnabled(false);
     ui->BrushSizeSlider->setEnabled(false);
     ui->Canvas->clearAll();
-    ui->ChatList->addItem("Система: Раунд окончен! Подсчет очков...");
+    addSystemMessage("Система: Раунд окончен! Подсчет очков...", MsgType::Info);
     playersTableUpdate();
 }
 
@@ -379,8 +422,10 @@ void GameWindow::onGameEnded(){
 void GameWindow::tableInChat(){
     const QList<Player>& players = controller->getPlayers();
     for (const auto& player : players) {
-        QString output = QString("Система: Игрок %1 заработал: %2 очков!").arg(player.name(), QString::number(player.score()));
-        ui->ChatList->addItem(output);
+        QString output = QString("Система: Игрок %1 заработал: %2 очков!")
+                         .arg(player.name(), QString::number(player.score()));
+        
+        addSystemMessage(output, MsgType::Success);
     }
     ui->ChatList->scrollToBottom();
 }
@@ -409,4 +454,35 @@ void GameWindow::keyPressEvent(QKeyEvent *event) {
         }
     }
     QMainWindow::keyPressEvent(event);
+}
+
+void GameWindow::addSystemMessage(const QString& text, MsgType type)
+{
+    QListWidgetItem* item = new QListWidgetItem(text);
+    QFont font = item->font();
+    
+    switch (type) {
+        case MsgType::Success:
+            item->setForeground(QColor("#16a34a"));
+            item->setBackground(QColor("#f0fdf4"));
+            font.setBold(true);
+            break;
+            
+        case MsgType::Warning:
+            item->setForeground(QColor("#dc2626")); 
+            item->setBackground(QColor("#fee2e2")); 
+            font.setBold(true);
+            break;
+            
+        case MsgType::Info:
+        default:
+            item->setForeground(QColor("#4f46e5"));
+            item->setBackground(QColor("#e0e7ff"));
+            font.setBold(true);
+            break;
+    }
+    
+    item->setFont(font);
+    ui->ChatList->addItem(item);
+    ui->ChatList->scrollToBottom();
 }

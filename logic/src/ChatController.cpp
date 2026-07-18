@@ -22,14 +22,12 @@ void ChatController::sendMessage(Player& ply, const QString& message){
     bool isCorrect = chat_.addMessage(ply, message, state_, wordManager_);
     
     if (isCorrect) {
-
         std::time_t timeLeft = state_.roundEndTime() - std::time(nullptr);
         int bonus = ply.calculateScoreForGuess(timeLeft, state_.ROUND_TIME);
         emit messageReceived(-1, "Система", QString("Игрок %1 угадал слово!").arg(ply.name()));
         emit openedLettersMayHaveChanged();
         emit playersUpdated();
         emit playerGuessedWord(ply.id(), bonus);
-    
     } 
     else {
         emit messageReceived(ply.id(), ply.name(), message);

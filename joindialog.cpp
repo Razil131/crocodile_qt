@@ -6,6 +6,7 @@ JoinDialog::JoinDialog(QWidget *parent)
     , ui(new Ui::JoinDialog)
 {
     ui->setupUi(this);
+    setWindowTitle("Крокодил - Присоединиться к лобби");
 }
 
 JoinDialog::~JoinDialog()
