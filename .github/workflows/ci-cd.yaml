@@ -48,6 +48,13 @@ jobs:
           cmake -B build -S . -DCMAKE_BUILD_TYPE=Release
           cmake --build build --config Release
 
+      - name: copy dictionary for tests
+        shell: bash
+        run: |
+          cp russian.utf-8 build/
+          mkdir -p build/Release
+          cp russian.utf-8 build/Release/
+
       - name: run tests
         run: |
           ctest --test-dir build -C Release --output-on-failure
