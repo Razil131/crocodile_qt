@@ -33,6 +33,11 @@ GameWindow::GameWindow(GameController* ctrl, QWidget *parent)
         QMessageBox::critical(this, "ERROR", "Потеряно соединение с сервером");
         this->close();
     });
+    
+    connect(controller, &GameController::connectionFailed, this, [this](const QString& error) {
+         QMessageBox::critical(this, "ERROR", "Лобби заполнено");
+        this->close();
+    });
 
     connect(pressTimer, &QTimer::timeout, this, [=]() {
         duration += 100;

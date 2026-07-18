@@ -32,7 +32,9 @@ void NetworkManager::newConnection(){
             clientSocket->write(block);
             clientSocket->flush();
             connect(clientSocket, &QTcpSocket::disconnected, clientSocket, &QTcpSocket::deleteLater);
-            clientSocket->disconnectFromHost();
+            connect(clientSocket, &QTcpSocket::bytesWritten, clientSocket, [clientSocket]() {
+                clientSocket->disconnectFromHost();
+            }, Qt::SingleShotConnection);
             continue; 
         }
         clients_.append(clientSocket);

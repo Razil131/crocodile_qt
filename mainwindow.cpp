@@ -65,10 +65,5 @@ void MainWindow::on_connectButton_clicked()
         g->show();
     });
 
-    connect(localController, &GameController::connectionFailed, this, [this, g](const QString& error) {;
-        g->close();
-        g->deleteLater();
-    });
-
     localController->connectToNetworkServer(j_dialog.IP, j_dialog.port, capturedNickname);
 }
