@@ -66,6 +66,13 @@ jobs:
           cp russian.utf-8 packed/$FOLDER_NAME/
           cd packed && 7z a ../$FOLDER_NAME.zip $FOLDER_NAME
 
+      - name: copy dictionary for tests
+        shell: bash
+        run: |
+          cp russian.utf-8 build/
+          mkdir -p build/Release
+          cp russian.utf-8 build/Release/
+
       - name: prepare linux asset
         if: matrix.os == 'ubuntu-24.04'
         run: |
