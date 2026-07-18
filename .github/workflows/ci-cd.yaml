@@ -66,6 +66,19 @@ jobs:
           cp russian.utf-8 packed/$FOLDER_NAME/
           cd packed && 7z a ../$FOLDER_NAME.zip $FOLDER_NAME
 
+      - name: Debug
+        shell: bash
+        run: |
+          echo "текущая папка репозитория"
+          pwd
+          ls -la
+          
+          echo "структура папки build"
+          find build -maxdepth 3 -not -path '*/.*'
+          
+          echo "=== пробуем найти где лежит сам исполняемый файл тестов"
+          find build -type f -executable -name "*test*" -o -name "*Test*" || tr
+
       - name: prepare linux asset
         if: matrix.os == 'ubuntu-24.04'
         run: |
