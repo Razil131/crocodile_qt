@@ -24,6 +24,7 @@ void MainWindow::on_createButton_clicked()
     GameController* localController = new GameController();
     GameWindow *g = new GameWindow(localController, this);
 
+    g->setAttribute(Qt::WA_DeleteOnClose);
     localController->setParent(g);
 
     connect(&c_dialog, &CreateDialog::nicknameEntered, this, [localController, g](const QString& nickname) {
@@ -56,6 +57,7 @@ void MainWindow::on_connectButton_clicked()
 
     GameController* localController = new GameController();
     GameWindow *g = new GameWindow(localController, this);
+    g->setAttribute(Qt::WA_DeleteOnClose);
     localController->setParent(g);
 
     connect(localController, &GameController::localPlayerIdAssigned, g, &GameWindow::setPlayer);
@@ -66,4 +68,11 @@ void MainWindow::on_connectButton_clicked()
     });
 
     localController->connectToNetworkServer(j_dialog.IP, j_dialog.port, capturedNickname);
+    connect(localController, &GameController::connectionFailed, this, [g](const QString& reason) {
+        g->deleteLater();
+    });
+
+    connect(localController, &GameController::serverDisconnected, this, [g] {
+        g->deleteLater();
+    });
 }

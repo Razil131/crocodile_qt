@@ -35,7 +35,7 @@ GameWindow::GameWindow(GameController* ctrl, QWidget *parent)
     });
     
     connect(controller, &GameController::connectionFailed, this, [this](const QString& error) {
-         QMessageBox::critical(this, "ERROR", "Лобби заполнено");
+         QMessageBox::critical(this, "ERROR", error);
         this->close();
     });
 
