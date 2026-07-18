@@ -2,27 +2,30 @@
 
 
 QString WordManager::chooseRandomWord(){
-    QList<std::string> words = getWordsFromFile("../russian.utf-8");
+    QList<std::string> words = getWordsFromFile(":/assets/russian.utf-8");
+        if (words.empty()) return "крокодил";
     std::random_device rd;
     std::mt19937 gen(rd());
     std::uniform_int_distribution<> dis(0, words.size() - 1);
 
     int randomIndex = dis(gen);
-    if (words.empty()) return "крокодил";
     return QString::fromStdString(words[randomIndex]);
-}
+ }
 
-QList<std::string> WordManager::getWordsFromFile(const std::string& fileName){
-    std::ifstream file(fileName);
-    if (!file.is_open()) {
-        std::cerr << "File didn't opened check the path!" << " " << fileName << std::endl;
+QList<std::string> WordManager::getWordsFromFile(const QString& fileName){
+    QList<std::string> words;
+    QFile file(fileName);
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) {
+        qCritical() << "File does not exists" << fileName;
+        return words; 
     }
 
-    QList<std::string> words;
-    std::string line;
-    while (std::getline(file, line)) {
-        if (!line.empty()) {
-            words.push_back(line);
+    QTextStream in(&file);
+    in.setEncoding(QStringConverter::Utf8);
+    while (!in.atEnd()) {
+        QString line = in.readLine().trimmed();
+        if (!line.isEmpty()) {
+            words.push_back(line.toStdString());
         }
     }
 

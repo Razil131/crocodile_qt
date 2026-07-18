@@ -48,14 +48,6 @@ jobs:
           cmake -B build -S . -DCMAKE_BUILD_TYPE=Release
           cmake --build build --config Release
 
-      - name: copy dictionary for tests
-        shell: bash
-        run: |
-          cp russian.utf-8 build/
-
-          mkdir -p build/Release
-          cp russian.utf-8 build/Release/
-
       - name: run tests
         run: |
           ctest --test-dir build -C Release --output-on-failure
@@ -64,14 +56,14 @@ jobs:
         if: matrix.os == 'windows-latest'
         shell: bash
         run: |
-          mkdir dist
-          cp build/Release/Crocodile.exe dist/
-          cp build/Release/crocodile_back.dll dist/
-          windeployqt --dir dist dist/Crocodile.exe
           FOLDER_NAME="${{ matrix.out }}-v0.0.${{ github.run_number }}"
-          mkdir -p packed/$FOLDER_NAME/bin
-          cp -r dist/* packed/$FOLDER_NAME/bin/
-          cp russian.utf-8 packed/$FOLDER_NAME/
+          mkdir -p packed/$FOLDER_NAME
+          
+          cp build/Release/Crocodile.exe packed/$FOLDER_NAME/
+          cp build/Release/crocodile_back.dll packed/$FOLDER_NAME/
+          
+          windeployqt --dir packed/$FOLDER_NAME packed/$FOLDER_NAME/Crocodile.exe
+          
           cd packed && 7z a ../$FOLDER_NAME.zip $FOLDER_NAME
 
       - name: prepare linux asset
@@ -92,12 +84,9 @@ jobs:
       - name: pack linux
         if: matrix.os == 'ubuntu-24.04'
         run: |
-          cqtdeployer -bin dist/Crocodile -lib dist/crocodile_back.so -targetDir dist_packaged
-          rm -rf dist
           FOLDER_NAME="${{ matrix.out }}-v0.0.${{ github.run_number }}"
-          mkdir packed
-          mv dist_packaged packed/$FOLDER_NAME
-          cp russian.utf-8 packed/$FOLDER_NAME/
+          cqtdeployer -bin dist/Crocodile -lib dist/crocodile_back.so -targetDir packed/$FOLDER_NAME
+          rm -rf dist
           tar -czf $FOLDER_NAME.tar.gz -C packed $FOLDER_NAME
 
       - name: upload artifact
@@ -105,7 +94,6 @@ jobs:
         with:
           name: ${{ matrix.out }}-v0.0.${{ github.run_number }}
           path: packed/
-
 
       - name: upload to github release
         if: github.event_name == 'push'
@@ -119,9 +107,3 @@ jobs:
           draft: false
           prerelease: false
           files: "${{ matrix.out }}-v0.0.${{ github.run_number }}.${{ matrix.ext }}"
-
-
-
-
-
-

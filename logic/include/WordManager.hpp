@@ -6,8 +6,10 @@
 #include <algorithm>
 #include <iostream>
 #include <ctime>
+#include <QtCore/QFile>
+#include <QtCore/QTextStream>
+#include <QtCore/QDebug>
 #include "exportMacro.hpp"
-
 #include "GameState.hpp"
 
 #ifdef UNIT_TESTS
@@ -21,7 +23,7 @@ class CROCODILE_BACK_EXPORT WordManager{
     FRIEND_TEST(WordManagerTest, OpenRandomLetterEarlyReturnsWhenNoLettersToOpen);
     FRIEND_TEST(WordManagerTest, ChooseRandomWordReturnsFallbackWhenFileMissing);
 private:
-    QList<std::string> getWordsFromFile(const std::string& path);
+    QList<std::string> getWordsFromFile(const QString& fileName);
     QString normalize(const QString& word);
     void openRandomLetter(GameState& state);
     QString chooseRandomWord();

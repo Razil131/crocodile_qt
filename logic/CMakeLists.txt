@@ -6,6 +6,7 @@ set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 
 set(CMAKE_AUTOMOC ON)
+set(CMAKE_AUTORCC ON)
 
 find_package(Qt6 REQUIRED COMPONENTS Core Gui Network Test)
 
@@ -30,6 +31,7 @@ set(SOURCE_FILE
     ./include/PlayerController.hpp
     ./include/NetworkTypes.hpp
     ./include/NetworkManager.hpp
+    resources.qrc
 )
 
 add_library(crocodile_back SHARED ${SOURCE_FILE})

@@ -88,8 +88,3 @@ CMakeLists.txt.user*
 # logic dir
 
 /logic/build*/
-
-# exclude words txt
-
-!build/russian.utf-8
-!build/russian_easy.utf-8
