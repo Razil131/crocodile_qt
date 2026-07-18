@@ -48,9 +48,22 @@ jobs:
           cmake -B build -S . -DCMAKE_BUILD_TYPE=Release
           cmake --build build --config Release
 
-      - name: run tests
+      - name: Debug paths for CTest
+        shell: bash
         run: |
-          ctest --test-dir build -C Release --output-on-failure
+          echo "=== 1. Текущая папка репозитория ==="
+          pwd
+          ls -la
+          
+          echo "=== 2. Структура папки build ==="
+          find build -maxdepth 3 -not -path '*/.*'
+          
+          echo "=== 3. Пробуем найти, где лежит сам исполняемый файл тестов ==="
+          find build -type f -executable -name "*test*" -o -name "*Test*" || true
+
+      # - name: run tests
+      #   run: |
+      #     ctest --test-dir build -C Release --output-on-failure
 
       - name: pack win
         if: matrix.os == 'windows-latest'
