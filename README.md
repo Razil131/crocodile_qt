@@ -83,12 +83,9 @@
 **Подключение и создание комнаты:**
 ![Создание](assets/screenshot-creating.png)
 
-<<<<<<< Updated upstream
-![Подключение](screenshot-connecting.png)
-
 **Игровой холст и чат:**
 ![Игровой процесс](assets/screenshot-gameplay.png)
-=======
+
 ![Подключение](assets/screenshot-connecting.png)
 
 **Игровой холст и чат:**
@@ -105,4 +102,3 @@
 
 * **Razil** — [*@Razil131*](https://github.com/Razil131)
 * **Shedoesacase** — [*@shedoesacase*](https://github.com/shedoesacase)
->>>>>>> Stashed changes
