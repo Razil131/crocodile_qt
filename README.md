@@ -83,14 +83,10 @@
 **Подключение и создание комнаты:**
 ![Создание](assets/screenshot-creating.png)
 
-**Игровой холст и чат:**
-![Игровой процесс](assets/screenshot-gameplay.png)
-
 ![Подключение](assets/screenshot-connecting.png)
 
 **Игровой холст и чат:**
 ![Игровой процесс](assets/screenshot-gameplay.png)
-
 
 ## 📄 Лицензия
 
