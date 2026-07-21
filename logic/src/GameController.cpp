@@ -19,6 +19,7 @@ GameController::GameController(){
     qDebug() << "Client received state, wordChooseTimeLeft:" << newState.wordChooseTimeLeft();
     bool isNewRound = (this->state_.RoundNum() != newState.RoundNum());
     bool isChoosing = newState.isChoosingWord();
+    bool isGameEnding = (!this->state_.isGameEnded() && newState.isGameEnded());
     
     this->state_ = newState;
     
@@ -33,6 +34,8 @@ GameController::GameController(){
         if (words.size() == 3) {
             emit wordsForChooseReady(words[0], words[1], words[2]);
         }
+    } else if (isGameEnding) {           // <-- добавить
+        emit gameEnded();
     } else if (isNewRound) {
         emit roundStarted(state_.RoundNum(), state_.currentWord());
     }

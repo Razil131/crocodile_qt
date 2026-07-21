@@ -33,6 +33,7 @@ private:
     bool isChoosingWord_ = false;
     QList<QString> wordsForChoose_;
     int wordChooseTimeLeft_ = 0;
+    bool gameEnded_ = false;
 public:
 
     GameState();
@@ -83,6 +84,9 @@ public:
 
     int wordChooseTimeLeft() const { return wordChooseTimeLeft_; }
     void setWordChooseTimeLeft(int t) { wordChooseTimeLeft_ = t; }
+
+    bool isGameEnded() const { return gameEnded_; }
+    void setGameEnded(bool v) { gameEnded_ = v; }
 };
 
 CROCODILE_BACK_EXPORT QDataStream &operator<<(QDataStream &out, const GameState &state);

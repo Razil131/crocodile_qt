@@ -116,6 +116,10 @@ void PaintWidget::clearAll() {
     emit commandGenerated(cmd);
 }
 
+void PaintWidget::clearHistory() {
+    history.clear();
+}
+
 void PaintWidget::executeCommand(DrawCommand cmd) {
     if (isReplayingHistory) {
         return;

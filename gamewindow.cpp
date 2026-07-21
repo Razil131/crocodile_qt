@@ -343,7 +343,7 @@ void GameWindow::onWordChooseStarted(const QString& w1, const QString& w2, const
 }
 
 void GameWindow::onRoundStarted(int roundNum, const QString& wordToDraw) {
-
+    ui->Canvas->clearHistory();
     ui->StartGameButton->hide();
 
     bool isMeExplainer = controller->players()->isExplainerByID(playerId_);
@@ -397,6 +397,7 @@ void GameWindow::onRoundEnded() {
     ui->Canvas->setDrawingEnabled(false);
     ui->BrushSizeSlider->setEnabled(false);
     ui->Canvas->clearAll();
+    ui->Canvas->clearHistory();
     addSystemMessage("Система: Раунд окончен! Подсчет очков...", MsgType::Info);
     playersTableUpdate();
 }

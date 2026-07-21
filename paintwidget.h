@@ -25,6 +25,7 @@ public:
     void setFillMode(bool b){fillMode = b; updateCursor();}
     void applyFill(QPoint start, QColor fillColor);
     void clearAll();
+    void clearHistory();
     void setDrawingEnabled(bool enabled) { drawingEnabled = enabled; updateCursor(); }
     bool isDrawingEnabled() const { return drawingEnabled; }
     void executeCommand(DrawCommand cmd);

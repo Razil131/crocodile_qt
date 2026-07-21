@@ -3,8 +3,12 @@
 
 void RoundManager::startNewRound(GameState& state){
     state.setRoundInProgress(true);
+    state.setGameEnded(false);
     if (state.RoundNum() == 0){
         state.setRoundCount(state.players().size());
+        for (Player& ply : state.mutablePlayers()){
+            ply.setScore(0);
+        }
     }
     if (state.RoundCount() == state.RoundNum()){
         state.setRoundInProgress(false);
@@ -34,9 +38,7 @@ void RoundManager::nextExplainer(GameState& state) {
 }
 
 void RoundManager::restartGame(GameState& state){
-    for (Player& ply:state.mutablePlayers()){
-        ply.setScore(0);
-    }
     state.setRoundNum(0);
     state.setExplainerID(state.players()[0].id());
+    state.setGameEnded(true);
 }
