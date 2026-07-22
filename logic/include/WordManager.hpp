@@ -23,10 +23,11 @@ class CROCODILE_BACK_EXPORT WordManager{
     FRIEND_TEST(WordManagerTest, OpenRandomLetterEarlyReturnsWhenNoLettersToOpen);
     FRIEND_TEST(WordManagerTest, ChooseRandomWordReturnsFallbackWhenFileMissing);
 private:
+    QString chooseRandomWord();
     QList<std::string> getWordsFromFile(const QString& fileName);
     QString normalize(const QString& word);
     void openRandomLetter(GameState& state);
-    QString chooseRandomWord();
+    
     
 public:
     bool updateOpenedLetters(GameState& state);

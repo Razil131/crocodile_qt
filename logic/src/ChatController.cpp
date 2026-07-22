@@ -8,14 +8,6 @@ ChatController::ChatController(GameState& state, WordManager& wordManager):
     chat_ = ChatManager();
 }
 
-bool ChatController::canSendMessage(const Player& ply){
-    if (state_.explainerID() == ply.id() or ply.isCurrentWordGuessed()){
-            return false;
-    }
-    return true;
-}
-
-
 void ChatController::sendMessage(Player& ply, const QString& message){
     if (!canSendMessage(ply)) return;
 
@@ -24,7 +16,7 @@ void ChatController::sendMessage(Player& ply, const QString& message){
     if (isCorrect) {
         std::time_t timeLeft = state_.roundEndTime() - std::time(nullptr);
         int bonus = ply.calculateScoreForGuess(timeLeft, state_.ROUND_TIME);
-        emit messageReceived(-1, "Система", QString("Игрок %1 угадал слово!").arg(ply.name()));
+        emit messageReceived(-1, "Система", QString(tr("Игрок %1 угадал слово!")).arg(ply.name()));
         emit openedLettersMayHaveChanged();
         emit playersUpdated();
         emit playerGuessedWord(ply.id(), bonus);
@@ -33,4 +25,11 @@ void ChatController::sendMessage(Player& ply, const QString& message){
         emit messageReceived(ply.id(), ply.name(), message);
         emit chatUpdated();
     }
+}
+
+bool ChatController::canSendMessage(const Player& ply){
+    if (state_.explainerID() == ply.id() or ply.isCurrentWordGuessed()){
+            return false;
+    }
+    return true;
 }

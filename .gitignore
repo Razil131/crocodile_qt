@@ -84,6 +84,7 @@ CMakeLists.txt.user*
 build/
 /.qtcreator/
 !app
+/.vscode/
 
 # logic dir
 

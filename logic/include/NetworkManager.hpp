@@ -43,6 +43,10 @@ public:
     void setPort(quint16 port);
     void setMaxClients(int maxClients);
 
+private slots:
+    void newConnection();
+    void onReadyRead();
+
 signals:
     void nicknameReceivedFromNetwork(QTcpSocket* clientSocket, const QString& nickname);
     void messageReceivedFromNetwork(QTcpSocket* clientSocket, const QString& text);
@@ -53,8 +57,4 @@ signals:
     void connectionFailed(const QString& errorString);
     void serverDisconnected();
     void connectionRejected(const QString& reason);
-
-private slots:
-    void newConnection();
-    void onReadyRead();
 };

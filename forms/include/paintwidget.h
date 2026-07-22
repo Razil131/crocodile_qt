@@ -44,10 +44,6 @@ protected:
     void resizeEvent(QResizeEvent *event) override;
     void enterEvent(QEnterEvent *event) override;
 
-signals:
-    void pointAdded(QPoint pos, QColor color, int width);
-    void commandGenerated(DrawCommand cmd);
-
 private:
     struct Stroke {
         QList<QPoint> point_list;
@@ -67,10 +63,6 @@ private:
         DrawCommand originalCommand;
     };
 
-    void drawStroke(QPainter &p, const Stroke &s);
-    void drawLineOnCanvas(const QPoint &from, const QPoint &to, const QColor &color, int width);
-    void updateCursor();
-
     Ui::PaintWidget *ui;
 
     bool drawingEnabled;
@@ -86,6 +78,15 @@ private:
     QImage canvas;
     QImage currentSnapshotBefore;
     QList<PaintAction> history;
+
+    void drawStroke(QPainter &p, const Stroke &s);
+    void drawLineOnCanvas(const QPoint &from, const QPoint &to, const QColor &color, int width);
+    void updateCursor();
+
+
+signals:
+    void pointAdded(QPoint pos, QColor color, int width);
+    void commandGenerated(DrawCommand cmd);
 };
 
 #endif // PAINTWIDGET_H

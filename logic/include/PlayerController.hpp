@@ -6,11 +6,6 @@
 
 class CROCODILE_BACK_EXPORT PlayerController: public QObject{
     Q_OBJECT
-signals:
-    void playerAdded(int playerId, const QString& name);
-    void playerScoreChanged(int playerId, int newScore);
-    void playersUpdated();
-
 private:
     GameState& state_;
     int nextPlayerId_ = 1;
@@ -25,4 +20,10 @@ public:
 
 public slots:
     void onScoreUpdate(int playerId, int newScore);
+
+signals:
+    void playerAdded(int playerId, const QString& name);
+    void playerScoreChanged(int playerId, int newScore);
+    void playersUpdated();
+
 };

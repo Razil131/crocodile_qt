@@ -3,12 +3,16 @@
 PlayerController::PlayerController(GameState& state):
     state_(state){}
 
-bool PlayerController::isExplainer(const Player& ply){
-    return ply.id() == state_.explainerID();
-}
-
-bool PlayerController::isExplainerByID(const int id){
-    return id == state_.explainerID();
+Player& PlayerController::createAndAddPlayer(const QString& name){
+    int assignedId = nextPlayerId_++;
+    
+    Player newPlayer(assignedId, name);
+    
+    state_.addPlayer(newPlayer);
+    
+    emit playersUpdated();
+    
+    return state_.mutablePlayers().back();
 }
 
 Player& PlayerController::getPlayerById(int id){
@@ -20,16 +24,12 @@ Player& PlayerController::getPlayerById(int id){
     throw std::runtime_error("player not found");
 }
 
-Player& PlayerController::createAndAddPlayer(const QString& name){
-    int assignedId = nextPlayerId_++;
-    
-    Player newPlayer(assignedId, name);
-    
-    state_.addPlayer(newPlayer);
-    
-    emit playersUpdated();
-    
-    return state_.mutablePlayers().back();
+bool PlayerController::isExplainer(const Player& ply){
+    return ply.id() == state_.explainerID();
+}
+
+bool PlayerController::isExplainerByID(const int id){
+    return id == state_.explainerID();
 }
 
 bool PlayerController::areAllGuessed(){

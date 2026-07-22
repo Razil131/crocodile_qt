@@ -20,6 +20,18 @@ PaintWidget::~PaintWidget()
     delete ui;
 }
 
+void PaintWidget::mouseMoveEvent(QMouseEvent *event) {
+    if (!drawingEnabled || !isDrawing) return;
+
+    DrawCommand cmd;
+    cmd.type = DrawCommand::Move;
+    cmd.x = event->pos().x();
+    cmd.y = event->pos().y();
+    cmd.color = currentStroke.color;
+    cmd.width = currentStroke.width;
+    emit commandGenerated(cmd);
+}
+
 void PaintWidget::mousePressEvent(QMouseEvent *event) {
     if (!drawingEnabled) return;
     if(event->button() == Qt::LeftButton && fillMode){
@@ -40,44 +52,11 @@ void PaintWidget::mousePressEvent(QMouseEvent *event) {
     emit commandGenerated(cmd);
 }
 
-
-void PaintWidget::drawLineOnCanvas(const QPoint &from, const QPoint &to, const QColor &color, int width){
-    QPainter imagePainter(&canvas);
-    QPen pen;
-    pen = QPen(color, width, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
-    imagePainter.setPen(pen);
-    if (from == to) {
-        imagePainter.drawPoint(from);
-    } else {
-        imagePainter.drawLine(from, to);
-    }
-}
-
-void PaintWidget::mouseMoveEvent(QMouseEvent *event) {
-    if (!drawingEnabled || !isDrawing) return;
-
-    DrawCommand cmd;
-    cmd.type = DrawCommand::Move;
-    cmd.x = event->pos().x();
-    cmd.y = event->pos().y();
-    cmd.color = currentStroke.color;
-    cmd.width = currentStroke.width;
-    emit commandGenerated(cmd);
-}
-
 void PaintWidget::mouseReleaseEvent(QMouseEvent *event) {
     if (!drawingEnabled || fillMode) return;
     DrawCommand cmd;
     cmd.type = DrawCommand::End;
     emit commandGenerated(cmd);
-}
-
-void PaintWidget::drawStroke(QPainter &p, const Stroke &s){
-    QPen pen(s.color, s.width, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
-    p.setPen(pen);
-    for(int j = 1; j < s.point_list.size(); j++){
-        p.drawLine(s.point_list[j-1], s.point_list[j]);
-    }
 }
 
 void PaintWidget::applyFill(QPoint start, QColor fillColor){ //заливка
@@ -103,11 +82,6 @@ void PaintWidget::applyFill(QPoint start, QColor fillColor){ //заливка
         }
     }
     update();
-}
-
-void PaintWidget::paintEvent(QPaintEvent *event){ //ивент для рисования
-    QPainter painter(this);
-    painter.drawImage(0, 0, canvas);
 }
 
 void PaintWidget::clearAll() {
@@ -232,6 +206,11 @@ void PaintWidget::syncUndoToNetwork() {
     isReplayingHistory = false;
 }
 
+void PaintWidget::paintEvent(QPaintEvent *event){
+    QPainter painter(this);
+    painter.drawImage(0, 0, canvas);
+}
+
 void PaintWidget::resizeEvent(QResizeEvent *event) {
     QWidget::resizeEvent(event);
 
@@ -247,6 +226,31 @@ void PaintWidget::resizeEvent(QResizeEvent *event) {
     }
 }
 
+void PaintWidget::enterEvent(QEnterEvent *event) {
+    QWidget::enterEvent(event);
+    updateCursor();
+}
+
+void PaintWidget::drawStroke(QPainter &p, const Stroke &s){
+    QPen pen(s.color, s.width, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
+    p.setPen(pen);
+    for(int j = 1; j < s.point_list.size(); j++){
+        p.drawLine(s.point_list[j-1], s.point_list[j]);
+    }
+}
+
+void PaintWidget::drawLineOnCanvas(const QPoint &from, const QPoint &to, const QColor &color, int width){
+    QPainter imagePainter(&canvas);
+    QPen pen;
+    pen = QPen(color, width, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
+    imagePainter.setPen(pen);
+    if (from == to) {
+        imagePainter.drawPoint(from);
+    } else {
+        imagePainter.drawLine(from, to);
+    }
+}
+
 void PaintWidget::updateCursor() {
     if (!drawingEnabled) {
         setCursor(Qt::ArrowCursor);
@@ -258,9 +262,4 @@ void PaintWidget::updateCursor() {
     } else {
         setCursor(Qt::CrossCursor); 
     }
-}
-
-void PaintWidget::enterEvent(QEnterEvent *event) {
-    QWidget::enterEvent(event);
-    updateCursor();
 }

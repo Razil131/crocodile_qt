@@ -8,13 +8,10 @@
 
 class CROCODILE_BACK_EXPORT ChatController: public QObject{
     Q_OBJECT
-signals:
-    void chatUpdated();
-    void messageReceived(int senderId, const QString& senderName, const QString& text);
-    void playerGuessedWord(int playerId, int scoreBonus);
-    void playerScoreMayHaveChanged();
-    void openedLettersMayHaveChanged();
-    void playersUpdated();
+    
+public:
+    ChatController(GameState& state, WordManager& wordManager);
+    void sendMessage(Player& ply, const QString& message);
 
 private:
     GameState& state_;
@@ -22,10 +19,12 @@ private:
     ChatManager chat_;
     bool canSendMessage(const Player& ply);
 
-public:
-    ChatController(GameState& state, WordManager& wordManager);
-    void sendMessage(Player& ply, const QString& message);
-
-
+signals:
+    void chatUpdated();
+    void messageReceived(int senderId, const QString& senderName, const QString& text);
+    void playerGuessedWord(int playerId, int scoreBonus);
+    void playerScoreMayHaveChanged();
+    void openedLettersMayHaveChanged();
+    void playersUpdated();
 
 };

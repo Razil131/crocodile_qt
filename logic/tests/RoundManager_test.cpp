@@ -110,6 +110,7 @@ TEST_F(RoundManagerTest, RestartGameResetsScoresRoundNumAndExplainer) {
     EXPECT_EQ(state.RoundNum(), 0);
     
     EXPECT_EQ(state.explainerID(), 1);
+    roundManager.startNewRound(state);
 
     for (const auto& ply : state.players()) {
         EXPECT_EQ(ply.score(), 0);
