@@ -85,7 +85,7 @@ jobs:
         if: matrix.os == 'ubuntu-24.04'
         run: |
           FOLDER_NAME="${{ matrix.out }}-v0.0.${{ github.run_number }}"
-          cqtdeployer -bin dist/Crocodile -lib dist/crocodile_back.so -targetDir packed/$FOLDER_NAME
+          cqtdeployer -bin dist/Crocodile -libDir dist -targetDir packed/$FOLDER_NAME
           rm -rf dist
           tar -czf $FOLDER_NAME.tar.gz -C packed $FOLDER_NAME
 

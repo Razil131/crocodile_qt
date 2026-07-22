@@ -85,7 +85,10 @@ if(MSVC)
 endif()
 
 if(UNIX AND NOT APPLE)
-    set_target_properties(Crocodile PROPERTIES LINK_FLAGS "-Wl,-rpath,'$ORIGIN'")
+    set_target_properties(Crocodile PROPERTIES
+        BUILD_RPATH "$ORIGIN:$ORIGIN/lib"
+        INSTALL_RPATH "$ORIGIN:$ORIGIN/lib"
+    )
 endif()
 
 if("${Qt6_VERSION}" VERSION_LESS "6.1.0")
