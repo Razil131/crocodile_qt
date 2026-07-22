@@ -49,8 +49,6 @@ private slots:
     void on_EraseButton_pressed();
     void on_EraseButton_released();
     void on_EnterChat_released();
-
-    void chatUpdate();
     void onWordChooseStarted(const QString& w1, const QString& w2, const QString& w3);
     void onRoundStarted(int roundNum, const QString& wordToDraw);
     void onOpenedLettersUpdated(const QList<QString>& openedLetters);

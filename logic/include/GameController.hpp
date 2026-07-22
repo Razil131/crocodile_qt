@@ -29,29 +29,6 @@ private:
 
     quint16 port_;
 
-signals:
-    void playerAdded(int playerId, const QString& name);
-    void playersUpdated();
-    void playerScoreChanged(int playerId, int newScore);
-
-    void messageReceived(int senderId, const QString& senderName, const QString& text);
-    void chatUpdated();
-
-    void drawCommandReceived(DrawCommand cmd);
-
-    void explainerUpdated(int newExplainerId);
-    void wordTimerUpdated(std::time_t timeLeft);
-    void roundStarted(int roundNum, const QString& wordToDraw);
-    void roundEnded();
-    void timerUpdated(std::time_t timeLeft);
-    void openedLettersUpdated(const QList<QString>& openedLetters);
-    void wordsForChooseReady(const QString& w1, const QString& w2, const QString& w3);
-    void gameEnded();
-    void localPlayerIdAssigned(int id);
-    void connectionSucceeded();
-    void connectionFailed(const QString& error);
-    void serverDisconnected();
-
 public:
     GameController();
 
@@ -87,4 +64,27 @@ public:
     bool isServer();
     void shutdownNetwork();
     void processPlayerDisconnect(int playerId);
+
+signals:
+    void playerAdded(int playerId, const QString& name);
+    void playersUpdated();
+    void playerScoreChanged(int playerId, int newScore);
+
+    void messageReceived(int senderId, const QString& senderName, const QString& text);
+    void chatUpdated();
+
+    void drawCommandReceived(DrawCommand cmd);
+
+    void explainerUpdated(int newExplainerId);
+    void wordTimerUpdated(std::time_t timeLeft);
+    void roundStarted(int roundNum, const QString& wordToDraw);
+    void roundEnded();
+    void timerUpdated(std::time_t timeLeft);
+    void openedLettersUpdated(const QList<QString>& openedLetters);
+    void wordsForChooseReady(const QString& w1, const QString& w2, const QString& w3);
+    void gameEnded();
+    void localPlayerIdAssigned(int id);
+    void connectionSucceeded();
+    void connectionFailed(const QString& error);
+    void serverDisconnected();
 };

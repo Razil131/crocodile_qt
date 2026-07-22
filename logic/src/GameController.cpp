@@ -16,30 +16,30 @@ GameController::GameController(){
     connect(chatController_, &ChatController::playersUpdated, this, &GameController::playersUpdated);
     
     connect(networkManager_, &NetworkManager::gameStateReceivedFromNetwork, this, [this](const GameState& newState) {
-    qDebug() << "Client received state, wordChooseTimeLeft:" << newState.wordChooseTimeLeft();
-    bool isNewRound = (this->state_.RoundNum() != newState.RoundNum());
-    bool isChoosing = newState.isChoosingWord();
-    bool isGameEnding = (!this->state_.isGameEnded() && newState.isGameEnded());
-    
-    this->state_ = newState;
-    
-    emit playersUpdated();
-    emit chatUpdated();
-    emit openedLettersUpdated(state_.openedLetters());
-    emit timerUpdated(getTimeLeft()); 
-    
-    if (isChoosing) {
-        emit wordTimerUpdated(state_.wordChooseTimeLeft());
-        const auto& words = state_.wordsForChoose();
-        if (words.size() == 3) {
-            emit wordsForChooseReady(words[0], words[1], words[2]);
+        qDebug() << "Client received state, wordChooseTimeLeft:" << newState.wordChooseTimeLeft();
+        bool isNewRound = (this->state_.RoundNum() != newState.RoundNum());
+        bool isChoosing = newState.isChoosingWord();
+        bool isGameEnding = (!this->state_.isGameEnded() && newState.isGameEnded());
+        
+        this->state_ = newState;
+        
+        emit playersUpdated();
+        emit chatUpdated();
+        emit openedLettersUpdated(state_.openedLetters());
+        emit timerUpdated(getTimeLeft()); 
+        
+        if (isChoosing) {
+            emit wordTimerUpdated(state_.wordChooseTimeLeft());
+            const auto& words = state_.wordsForChoose();
+            if (words.size() == 3) {
+                emit wordsForChooseReady(words[0], words[1], words[2]);
+            }
+        } else if (isGameEnding) {
+            emit gameEnded();
+        } else if (isNewRound) {
+            emit roundStarted(state_.RoundNum(), state_.currentWord());
         }
-    } else if (isGameEnding) {
-        emit gameEnded();
-    } else if (isNewRound) {
-        emit roundStarted(state_.RoundNum(), state_.currentWord());
-    }
-});
+    });
 
     connect(networkManager_, &NetworkManager::clientIdAssigned, this, [this](int assignedId) {
         if (!state_.players().isEmpty()) {
@@ -53,6 +53,68 @@ GameController::GameController(){
     connect(networkManager_, &NetworkManager::serverDisconnected, this, &GameController::serverDisconnected);
     connect(networkManager_, &NetworkManager::connectionRejected, this, &GameController::connectionFailed);
 }
+
+const QList<std::pair<QString, QString>>& GameController::getChatHistory() const {
+    static QList<std::pair<QString, QString>> dummy;
+    return dummy; 
+}
+
+const QList<Player>& GameController::getPlayers() {
+    return state_.players();
+}
+
+int GameController::getRoundTime() {
+    return state_.ROUND_TIME;
+}
+
+QList<QString> GameController::getOpenedLetters() {
+    return state_.openedLetters();
+}
+
+QString GameController::getIPandPort() {
+    QString ip = networkManager_->getIP();
+    quint16 port = getPort();
+    QString result = "IP " + ip + ":" + QString::number(port);
+    qDebug() << port;
+    return result;
+}
+
+int GameController::getRound() {
+    return state_.RoundNum();
+}
+
+int GameController::getRoundCount() {
+    return state_.RoundCount();
+}
+
+QString GameController::getWord() {
+    return state_.currentWord();
+}
+
+void GameController::selectWord(const QString& word) {
+    if (isServer_) {
+        roundController_->setWord(word);
+    } else {
+        networkManager_->sendSelectedWord(word);
+    }
+}
+
+void GameController::startGame() {
+    if (isServer_) {
+        roundController_->startWordChooseAndRound();
+    }
+}
+
+std::time_t GameController::getTimeLeft() {
+    std::time_t time_left = state_.roundEndTime() - std::time(nullptr);
+    return time_left >= 0 ? time_left : 0;
+}
+
+void GameController::setMaxClients(int maxClients){
+    networkManager_->setMaxClients(maxClients);
+}
+
+// NETWORKING
 
 void GameController::setupServerLogic() {
     connect(chatController_, &ChatController::messageReceived, this, [this](int senderId, const QString& senderName, const QString& text) {
@@ -116,50 +178,6 @@ void GameController::setupServerLogic() {
     });
 }
 
-const QList<std::pair<QString, QString>>& GameController::getChatHistory() const {
-    static QList<std::pair<QString, QString>> dummy;
-    return dummy; 
-}
-
-const QList<Player>& GameController::getPlayers() {
-    return state_.players();
-}
-
-int GameController::getRoundTime() {
-    return state_.ROUND_TIME;
-}
-
-QList<QString> GameController::getOpenedLetters() {
-    return state_.openedLetters();
-}
-
-QString GameController::getIPandPort() {
-    QString ip = networkManager_->getIP();
-    quint16 port = getPort();
-    QString result = "IP " + ip + ":" + QString::number(port);
-    qDebug() << port;
-    return result;
-}
-
-int GameController::getRound() {
-    return state_.RoundNum();
-}
-
-int GameController::getRoundCount() {
-    return state_.RoundCount();
-}
-
-QString GameController::getWord() {
-    return state_.currentWord();
-}
-
-std::time_t GameController::getTimeLeft() {
-    std::time_t time_left = state_.roundEndTime() - std::time(nullptr);
-    return time_left >= 0 ? time_left : 0;
-}
-
-// NETWORK
-
 void GameController::startNetworkServer(quint16 port) {
     isServer_ = true;
     setupServerLogic(); 
@@ -186,20 +204,6 @@ void GameController::sendChatMessage(const QString& text) {
         }
     } else {
         networkManager_->sendMessage(text);
-    }
-}
-
-void GameController::selectWord(const QString& word) {
-    if (isServer_) {
-        roundController_->setWord(word);
-    } else {
-        networkManager_->sendSelectedWord(word);
-    }
-}
-
-void GameController::startGame() {
-    if (isServer_) {
-        roundController_->startWordChooseAndRound();
     }
 }
 
@@ -253,8 +257,4 @@ void GameController::processPlayerDisconnect(int playerId) {
     }
     emit playersUpdated();
     sendCurrentGameState();
-}
-
-void GameController::setMaxClients(int maxClients){
-    networkManager_->setMaxClients(maxClients);
 }

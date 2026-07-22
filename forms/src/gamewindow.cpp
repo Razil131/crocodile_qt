@@ -16,8 +16,6 @@ GameWindow::GameWindow(GameController* ctrl, QWidget *parent)
 
     pressTimer = new QTimer(this);
     pressTimer->setInterval(100);
-
-    connect(controller, &GameController::chatUpdated, this, &GameWindow::chatUpdate);
     connect(controller, &GameController::playersUpdated, this, &GameWindow::playersTableUpdate);
     connect(controller, &GameController::wordsForChooseReady, this, &GameWindow::onWordChooseStarted);
     connect(controller, &GameController::roundStarted, this, &GameWindow::onRoundStarted);
@@ -86,18 +84,49 @@ void GameWindow::setPlayer(int assignedId) {
     playersTableUpdate();
 }
 
-QString GameWindow::getWordLabelStr(const QList<QString>& letters) {
-    if (!controller->players()->isExplainerByID(playerId_) &&
-        !controller->players()->getPlayerById(playerId_).isCurrentWordGuessed())
-    {
-        QString wordLabelStr = "";
-        for (const auto& l : letters) {
-            wordLabelStr += l + " ";
-        }
-        return wordLabelStr.trimmed();
-    }
+void GameWindow::setHostMode(bool isHost) {
+    ui->IPLabel->setVisible(isHost);
+}
 
-    return controller->getWord();
+void GameWindow::updateIPlabel(){
+    ui->IPLabel->setText(controller->getIPandPort());
+}
+
+bool GameWindow::eventFilter(QObject *obj, QEvent *event) {
+    if (obj == ui->DesignFrame && event->type() == QEvent::Paint) {
+        if (duration > 0) {
+            QPainter painter(ui->DesignFrame);
+            painter.setRenderHint(QPainter::Antialiasing);
+            QRect btnRect = ui->EraseButton->geometry();
+            QPen pen(QColor(0, 255, 0), 5);
+            pen.setCapStyle(Qt::RoundCap);
+            painter.setPen(pen);
+
+            int startAngle = 90 * 16;
+            int spanAngle = -(duration * (360 * 16) / 1000);
+            painter.drawArc(btnRect.adjusted(-5, -5, 5, 5), startAngle, spanAngle);
+        }
+        return false;
+    }
+    return QMainWindow::eventFilter(obj, event);
+}
+
+void GameWindow::closeEvent(QCloseEvent *event) {
+    if (controller) {
+        controller->shutdownNetwork();
+    }
+    event->accept();
+}
+
+void GameWindow::keyPressEvent(QKeyEvent *event) {
+    if (event->matches(QKeySequence::Undo) ||
+        (event->key() == Qt::Key_Z && (event->modifiers() & Qt::ControlModifier)))
+    {
+        if (controller->players()->isExplainerByID(playerId_)) {
+            ui->Canvas->undo();
+        }
+    }
+    QMainWindow::keyPressEvent(event);
 }
 
 void GameWindow::on_StartGameButton_clicked()
@@ -118,6 +147,27 @@ void GameWindow::on_StartGameButton_clicked()
             ui->ChatList->addItem(item);
             ui->ChatList->scrollToBottom();
         }
+    }
+}
+
+void GameWindow::on_Word1Label_clicked()
+{
+    if (controller->players()->isExplainerByID(playerId_)) {
+        controller->selectWord(ui->Word1Label->text());
+    }
+}
+
+void GameWindow::on_Word2Label_clicked()
+{
+    if (controller->players()->isExplainerByID(playerId_)) {
+        controller->selectWord(ui->Word2Label->text());
+    }
+}
+
+void GameWindow::on_Word3Label_clicked()
+{
+    if (controller->players()->isExplainerByID(playerId_)) {
+        controller->selectWord(ui->Word3Label->text());
     }
 }
 
@@ -180,25 +230,6 @@ void GameWindow::on_EraseButton_released()
     }
 }
 
-bool GameWindow::eventFilter(QObject *obj, QEvent *event) {
-    if (obj == ui->DesignFrame && event->type() == QEvent::Paint) {
-        if (duration > 0) {
-            QPainter painter(ui->DesignFrame);
-            painter.setRenderHint(QPainter::Antialiasing);
-            QRect btnRect = ui->EraseButton->geometry();
-            QPen pen(QColor(0, 255, 0), 5);
-            pen.setCapStyle(Qt::RoundCap);
-            painter.setPen(pen);
-
-            int startAngle = 90 * 16;
-            int spanAngle = -(duration * (360 * 16) / 1000);
-            painter.drawArc(btnRect.adjusted(-5, -5, 5, 5), startAngle, spanAngle);
-        }
-        return false;
-    }
-    return QMainWindow::eventFilter(obj, event);
-}
-
 void GameWindow::on_EnterChat_released()
 {
     QString input = ui->InputChat->text().trimmed();
@@ -207,115 +238,6 @@ void GameWindow::on_EnterChat_released()
     if (!input.isEmpty()) {
         controller->sendChatMessage(input);
     }
-}
-void GameWindow::chatUpdate() {
-    //
-}
-
-void GameWindow::onMessageReceived(int senderId, const QString& senderName, const QString& text) {
-    if (senderId == -1 || senderName == "Система") {
-        MsgType type = MsgType::Success;     
-        addSystemMessage(QString("%1: %2").arg(senderName, text), type);      
-    } else {
-        ui->ChatList->addItem(QString("%1: %2").arg(senderName, text));
-        ui->ChatList->scrollToBottom();
-    }
-}
-
-void GameWindow::on_Word1Label_clicked()
-{
-    if (controller->players()->isExplainerByID(playerId_)) {
-        controller->selectWord(ui->Word1Label->text());
-    }
-}
-
-void GameWindow::on_Word2Label_clicked()
-{
-    if (controller->players()->isExplainerByID(playerId_)) {
-        controller->selectWord(ui->Word2Label->text());
-    }
-}
-
-void GameWindow::on_Word3Label_clicked()
-{
-    if (controller->players()->isExplainerByID(playerId_)) {
-        controller->selectWord(ui->Word3Label->text());
-    }
-}
-
-void GameWindow::playersTableUpdate() {
-    ui->PlayersTable->setUpdatesEnabled(false);
-    ui->PlayersTable->clearContents();
-
-    const QList<Player>& players = controller->getPlayers();
-    ui->PlayersTable->setRowCount(players.size());
-
-    for (int row = 0; row < players.size(); ++row) {
-        const auto& player = players[row];
-        bool isExplainer = controller->players()->isExplainer(player);
-
-        QTableWidgetItem* nameItem = new QTableWidgetItem(player.name());
-        
-        QString status = isExplainer ? "Рисующий" : "Игрок";
-        QTableWidgetItem* statusItem = new QTableWidgetItem(status);
-        
-        QTableWidgetItem* scoreItem = new QTableWidgetItem(QString::number(player.score()));
-
-        nameItem->setTextAlignment(Qt::AlignLeft | Qt::AlignVCenter);
-        statusItem->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
-        scoreItem->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
-
-        if (isExplainer) {
-            QColor rowBg("#e0e7ff");
-            nameItem->setBackground(rowBg);
-            statusItem->setBackground(rowBg);
-            scoreItem->setBackground(rowBg);
-
-            statusItem->setForeground(QColor("#4f46e5"));
-            QFont font = statusItem->font();
-            font.setBold(true);
-            statusItem->setFont(font);
-            
-            nameItem->setFont(font);
-            scoreItem->setFont(font);
-        } else {
-            statusItem->setForeground(QColor("#4b5563"));
-        }
-
-        // 4. Заталкиваем элементы в таблицу
-        ui->PlayersTable->setItem(row, 0, nameItem);
-        ui->PlayersTable->setItem(row, 1, statusItem);
-        ui->PlayersTable->setItem(row, 2, scoreItem);
-    }
-    ui->PlayersTable->setUpdatesEnabled(true);
-}
-
-void GameWindow::tableCreate() {
-    ui->DesignFrame->installEventFilter(this);
-    ui->WordLabel->hide();
-    ui->PlayersTable->setColumnCount(3);
-    ui->PlayersTable->setShowGrid(false);
-    ui->PlayersTable->setFrameShape(QFrame::NoFrame);
-    ui->PlayersTable->setEditTriggers(QAbstractItemView::NoEditTriggers);
-    ui->PlayersTable->setSelectionMode(QAbstractItemView::NoSelection);
-    ui->PlayersTable->verticalHeader()->setVisible(false);
-    ui->PlayersTable->horizontalHeader()->setVisible(false);
-    ui->PlayersTable->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    ui->PlayersTable->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
-    ui->PlayersTable->verticalHeader()->setSectionResizeMode(QHeaderView::Fixed);
-    ui->PlayersTable->verticalHeader()->setDefaultSectionSize(35);
-    ui->PlayersTable->horizontalHeader()->setStretchLastSection(false);
-    ui->PlayersTable->horizontalHeader()->setSectionsMovable(false);
-    ui->PlayersTable->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Fixed);
-    ui->PlayersTable->setColumnWidth(0, 100); 
-    ui->PlayersTable->horizontalHeader()->setSectionResizeMode(1, QHeaderView::Stretch);
-    ui->PlayersTable->horizontalHeader()->setSectionResizeMode(2, QHeaderView::Fixed);
-    ui->PlayersTable->setColumnWidth(2, 60);
-}
-
-void GameWindow::showRound() {
-    QString round = QString("Раунд %1/%2").arg(QString::number(controller->getRound()), QString::number(controller->getRoundCount()));
-    ui->RoundNumLabel->setText(round);
 }
 
 void GameWindow::onWordChooseStarted(const QString& w1, const QString& w2, const QString& w3) {
@@ -413,11 +335,109 @@ void GameWindow::onExplainerUpdated(int newExplainerId) {
     playersTableUpdate();
 }
 
+void GameWindow::onMessageReceived(int senderId, const QString& senderName, const QString& text) {
+    if (senderId == -1 || senderName == "Система") {
+        MsgType type = MsgType::Success;     
+        addSystemMessage(QString("%1: %2").arg(senderName, text), type);      
+    } else {
+        ui->ChatList->addItem(QString("%1: %2").arg(senderName, text));
+        ui->ChatList->scrollToBottom();
+    }
+}
+
 void GameWindow::onGameEnded(){
     tableInChat();
     qDebug() << "onGameEnded вызван!";
     playersTableUpdate();
     ui->StartGameButton->show();
+}
+
+QString GameWindow::getWordLabelStr(const QList<QString>& letters) {
+    if (!controller->players()->isExplainerByID(playerId_) &&
+        !controller->players()->getPlayerById(playerId_).isCurrentWordGuessed())
+    {
+        QString wordLabelStr = "";
+        for (const auto& l : letters) {
+            wordLabelStr += l + " ";
+        }
+        return wordLabelStr.trimmed();
+    }
+
+    return controller->getWord();
+}
+
+void GameWindow::showRound() {
+    QString round = QString("Раунд %1/%2").arg(QString::number(controller->getRound()), QString::number(controller->getRoundCount()));
+    ui->RoundNumLabel->setText(round);
+}
+
+void GameWindow::playersTableUpdate() {
+    ui->PlayersTable->setUpdatesEnabled(false);
+    ui->PlayersTable->clearContents();
+
+    const QList<Player>& players = controller->getPlayers();
+    ui->PlayersTable->setRowCount(players.size());
+
+    for (int row = 0; row < players.size(); ++row) {
+        const auto& player = players[row];
+        bool isExplainer = controller->players()->isExplainer(player);
+
+        QTableWidgetItem* nameItem = new QTableWidgetItem(player.name());
+        
+        QString status = isExplainer ? "Рисующий" : "Игрок";
+        QTableWidgetItem* statusItem = new QTableWidgetItem(status);
+        
+        QTableWidgetItem* scoreItem = new QTableWidgetItem(QString::number(player.score()));
+
+        nameItem->setTextAlignment(Qt::AlignLeft | Qt::AlignVCenter);
+        statusItem->setTextAlignment(Qt::AlignHCenter | Qt::AlignVCenter);
+        scoreItem->setTextAlignment(Qt::AlignRight | Qt::AlignVCenter);
+
+        if (isExplainer) {
+            QColor rowBg("#e0e7ff");
+            nameItem->setBackground(rowBg);
+            statusItem->setBackground(rowBg);
+            scoreItem->setBackground(rowBg);
+
+            statusItem->setForeground(QColor("#4f46e5"));
+            QFont font = statusItem->font();
+            font.setBold(true);
+            statusItem->setFont(font);
+            
+            nameItem->setFont(font);
+            scoreItem->setFont(font);
+        } else {
+            statusItem->setForeground(QColor("#4b5563"));
+        }
+
+        ui->PlayersTable->setItem(row, 0, nameItem);
+        ui->PlayersTable->setItem(row, 1, statusItem);
+        ui->PlayersTable->setItem(row, 2, scoreItem);
+    }
+    ui->PlayersTable->setUpdatesEnabled(true);
+}
+
+void GameWindow::tableCreate() {
+    ui->DesignFrame->installEventFilter(this);
+    ui->WordLabel->hide();
+    ui->PlayersTable->setColumnCount(3);
+    ui->PlayersTable->setShowGrid(false);
+    ui->PlayersTable->setFrameShape(QFrame::NoFrame);
+    ui->PlayersTable->setEditTriggers(QAbstractItemView::NoEditTriggers);
+    ui->PlayersTable->setSelectionMode(QAbstractItemView::NoSelection);
+    ui->PlayersTable->verticalHeader()->setVisible(false);
+    ui->PlayersTable->horizontalHeader()->setVisible(false);
+    ui->PlayersTable->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    ui->PlayersTable->setVerticalScrollBarPolicy(Qt::ScrollBarAlwaysOff);
+    ui->PlayersTable->verticalHeader()->setSectionResizeMode(QHeaderView::Fixed);
+    ui->PlayersTable->verticalHeader()->setDefaultSectionSize(35);
+    ui->PlayersTable->horizontalHeader()->setStretchLastSection(false);
+    ui->PlayersTable->horizontalHeader()->setSectionsMovable(false);
+    ui->PlayersTable->horizontalHeader()->setSectionResizeMode(0, QHeaderView::Fixed);
+    ui->PlayersTable->setColumnWidth(0, 100); 
+    ui->PlayersTable->horizontalHeader()->setSectionResizeMode(1, QHeaderView::Stretch);
+    ui->PlayersTable->horizontalHeader()->setSectionResizeMode(2, QHeaderView::Fixed);
+    ui->PlayersTable->setColumnWidth(2, 60);
 }
 
 void GameWindow::tableInChat(){
@@ -429,32 +449,6 @@ void GameWindow::tableInChat(){
         addSystemMessage(output, MsgType::Success);
     }
     ui->ChatList->scrollToBottom();
-}
-
-void GameWindow::setHostMode(bool isHost) {
-    ui->IPLabel->setVisible(isHost);
-}
-
-void GameWindow::updateIPlabel(){
-    ui->IPLabel->setText(controller->getIPandPort());
-}
-
-void GameWindow::closeEvent(QCloseEvent *event) {
-    if (controller) {
-        controller->shutdownNetwork();
-    }
-    event->accept();
-}
-
-void GameWindow::keyPressEvent(QKeyEvent *event) {
-    if (event->matches(QKeySequence::Undo) ||
-        (event->key() == Qt::Key_Z && (event->modifiers() & Qt::ControlModifier)))
-    {
-        if (controller->players()->isExplainerByID(playerId_)) {
-            ui->Canvas->undo();
-        }
-    }
-    QMainWindow::keyPressEvent(event);
 }
 
 void GameWindow::addSystemMessage(const QString& text, MsgType type)

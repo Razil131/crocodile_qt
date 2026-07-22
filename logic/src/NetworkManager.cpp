@@ -19,6 +19,197 @@ void NetworkManager::startServer(quint16 port, const QString& hostNickname) {
     connect(server_, &QTcpServer::newConnection, this, &NetworkManager::newConnection);
 }
 
+void NetworkManager::connectToServer(QString ip_adress, quint16 port) {
+    if (socket_) {
+        socket_->disconnectFromHost();
+        socket_->deleteLater();
+        socket_ = nullptr;
+    }
+    socket_ = new QTcpSocket(this);
+    connect(socket_, &QTcpSocket::readyRead, this, &NetworkManager::onReadyRead);
+    QTcpSocket* currentSocket = socket_;
+    connect(socket_, &QTcpSocket::disconnected, this, [this, currentSocket]() {
+        nextBlockSizes_.remove(currentSocket);
+    });
+
+    connect(socket_, &QTcpSocket::connected, this, &NetworkManager::connectionEstablished);
+    connect(socket_, &QTcpSocket::errorOccurred, this, [this](QAbstractSocket::SocketError error) {
+        qDebug() << "Ошибка сокета клиента:" << error;
+        if (error == QAbstractSocket::RemoteHostClosedError) {
+            emit serverDisconnected();
+        } else {
+            emit connectionFailed(socket_->errorString());
+        }
+    });
+
+    socket_->connectToHost(ip_adress, port);
+}
+
+void NetworkManager::stopNetwork() {
+    if (server_) {
+        for (QTcpSocket* client : clients_) {
+            if (client && client->state() == QAbstractSocket::ConnectedState) {
+                client->disconnectFromHost();
+            }
+        }
+        server_->close();
+    }
+    if (socket_) {
+        socket_->disconnectFromHost();
+    }
+}
+
+void NetworkManager::sendDraw(const DrawCommand& cmd){
+    QByteArray block;
+    QDataStream out(&block, QIODevice::WriteOnly);
+    out.setVersion(QDataStream::Qt_6_0);
+    out << quint16(0) << static_cast<quint8>(NetworkTypes::Draw_);
+    out << cmd;
+    out.device()->seek(0);
+    quint16 actualSize = static_cast<quint16>(block.size() - sizeof(quint16));
+    out << actualSize;
+    if (server_) {
+        broadcast(block, nullptr);
+    } else if (socket_ && socket_->state() == QAbstractSocket::ConnectedState) {
+        socket_->write(block);
+        socket_->flush();
+    }
+}
+
+
+void NetworkManager::sendMessage(const QString& text) {
+    QByteArray block;
+    QDataStream out(&block, QIODevice::WriteOnly);
+    out.setVersion(QDataStream::Qt_6_0);
+    out << quint16(0) << static_cast<quint8>(NetworkTypes::Message_);
+    out << text;
+    out.device()->seek(0);
+    quint16 actualSize = static_cast<quint16>(block.size() - sizeof(quint16));
+    out << actualSize;
+
+    if (!server_) {
+        if (socket_ && socket_->state() == QAbstractSocket::ConnectedState) {
+            socket_->write(block);
+            socket_->flush();
+        }
+    } else {
+        broadcast(block, nullptr);
+    }
+}
+
+void NetworkManager::sendState(const GameState& state){
+    QByteArray block;
+    QDataStream out(&block, QIODevice::WriteOnly);
+    out.setVersion(QDataStream::Qt_6_0);
+    out << quint16(0) << static_cast<quint8>(NetworkTypes::State_);
+    out << state;
+    out.device()->seek(0);
+    quint16 actualSize = static_cast<quint16>(block.size() - sizeof(quint16));
+    out << actualSize;
+    if(!server_){
+        if(socket_ && socket_->state() == QAbstractSocket::ConnectedState) {
+            socket_->write(block);
+            socket_->flush();
+        }
+    }
+    else{
+        broadcast(block, nullptr);
+    }
+}
+
+void NetworkManager::sendNickname(const QString& nickname){
+    QByteArray block;
+    QDataStream out(&block, QIODevice::WriteOnly);
+    out.setVersion(QDataStream::Qt_6_0);
+    out << quint16(0) << static_cast<quint8>(NetworkTypes::Nickname_) << nickname;
+    out.device()->seek(0);
+    quint16 actualSize = static_cast<quint16>(block.size() - sizeof(quint16));
+    out << actualSize;
+    if (!server_) {
+        if (socket_) {
+            if (socket_->state() == QAbstractSocket::ConnectedState) {
+                socket_->write(block);
+                socket_->flush();
+            } else {
+                connect(socket_, &QTcpSocket::connected, this, [this, block]() {
+                    socket_->write(block);
+                    socket_->flush();
+                }, Qt::SingleShotConnection);
+            }
+        }
+    }
+}
+
+void NetworkManager::broadcast(const QByteArray &bytes, QTcpSocket* sender){
+    if(!server_){
+        return;
+    }
+    for(auto client : clients_){
+        if(client == sender){
+            continue;
+        }
+        if (client->state() == QAbstractSocket::ConnectedState) {
+            client->write(bytes);
+            client->flush();
+        }
+    }
+}
+
+void NetworkManager::sendBroadcastMessage(const QString& senderName, const QString& text) {
+    if (!server_) return;
+
+    QByteArray block;
+    QDataStream out(&block, QIODevice::WriteOnly);
+    out.setVersion(QDataStream::Qt_6_0);
+    out << quint16(0) << static_cast<quint8>(NetworkTypes::Message_) << senderName << text;
+    out.device()->seek(0);
+    quint16 actualSize = static_cast<quint16>(block.size() - sizeof(quint16));
+    out << actualSize;
+
+    broadcast(block, nullptr);
+}
+
+void NetworkManager::sendSelectedWord(const QString& word) {
+    QByteArray block;
+    QDataStream out(&block, QIODevice::WriteOnly);
+    out.setVersion(QDataStream::Qt_6_0);
+    out << quint16(0) << static_cast<quint8>(NetworkTypes::WordSelected_) << word;
+    out.device()->seek(0);
+    quint16 actualSize = static_cast<quint16>(block.size() - sizeof(quint16));
+    out << actualSize;
+
+    if (!server_) {
+        if (socket_ && socket_->state() == QAbstractSocket::ConnectedState) {
+            socket_->write(block);
+            socket_->flush();
+        }
+    }
+}
+
+QString NetworkManager::getIP(){
+    const QList<QHostAddress> ipAddressesList = QNetworkInterface::allAddresses();
+    for (const QHostAddress &address : ipAddressesList) {
+        if (address.protocol() == QAbstractSocket::IPv4Protocol && address != QHostAddress(QHostAddress::LocalHost)) {
+            return address.toString();
+        }
+    }
+    return QHostAddress(QHostAddress::LocalHost).toString(); 
+}
+
+quint16 NetworkManager::getPort(){
+    return port_;
+}
+
+void NetworkManager::setPort(quint16 port){
+    qDebug() << "netwmanager port" << port;
+    port_ = port;
+    qDebug() << "final port" << port_;
+}
+
+void NetworkManager::setMaxClients(int maxClients){
+    max_clients_ = maxClients;
+}
+
 void NetworkManager::newConnection(){
     while (server_->hasPendingConnections()) {
         QTcpSocket* clientSocket = server_->nextPendingConnection();
@@ -54,20 +245,6 @@ void NetworkManager::newConnection(){
                 gameController->processPlayerDisconnect(disconnectedId);
             }
         });
-    }
-}
-
-void NetworkManager::stopNetwork() {
-    if (server_) {
-        for (QTcpSocket* client : clients_) {
-            if (client && client->state() == QAbstractSocket::ConnectedState) {
-                client->disconnectFromHost();
-            }
-        }
-        server_->close();
-    }
-    if (socket_) {
-        socket_->disconnectFromHost();
     }
 }
 
@@ -186,180 +363,4 @@ void NetworkManager::onReadyRead() {
         }
         nextBlockSize = 0;
     }
-}
-
-void NetworkManager::broadcast(const QByteArray &bytes, QTcpSocket* sender){
-    if(!server_){
-        return;
-    }
-    for(auto client : clients_){
-        if(client == sender){
-            continue;
-        }
-        if (client->state() == QAbstractSocket::ConnectedState) {
-            client->write(bytes);
-            client->flush();
-        }
-    }
-}
-
-void NetworkManager::sendBroadcastMessage(const QString& senderName, const QString& text) {
-    if (!server_) return;
-
-    QByteArray block;
-    QDataStream out(&block, QIODevice::WriteOnly);
-    out.setVersion(QDataStream::Qt_6_0);
-    out << quint16(0) << static_cast<quint8>(NetworkTypes::Message_) << senderName << text;
-    out.device()->seek(0);
-    quint16 actualSize = static_cast<quint16>(block.size() - sizeof(quint16));
-    out << actualSize;
-
-    broadcast(block, nullptr);
-}
-
-void NetworkManager::connectToServer(QString ip_adress, quint16 port) {
-    if (socket_) {
-        socket_->disconnectFromHost();
-        socket_->deleteLater();
-        socket_ = nullptr;
-    }
-    socket_ = new QTcpSocket(this);
-    connect(socket_, &QTcpSocket::readyRead, this, &NetworkManager::onReadyRead);
-    QTcpSocket* currentSocket = socket_;
-    connect(socket_, &QTcpSocket::disconnected, this, [this, currentSocket]() {
-        nextBlockSizes_.remove(currentSocket);
-    });
-
-    connect(socket_, &QTcpSocket::connected, this, &NetworkManager::connectionEstablished);
-    connect(socket_, &QTcpSocket::errorOccurred, this, [this](QAbstractSocket::SocketError error) {
-        qDebug() << "Ошибка сокета клиента:" << error;
-        if (error == QAbstractSocket::RemoteHostClosedError) {
-            emit serverDisconnected();
-        } else {
-            emit connectionFailed(socket_->errorString());
-        }
-    });
-
-    socket_->connectToHost(ip_adress, port);
-}
-
-void NetworkManager::sendDraw(const DrawCommand& cmd){
-    QByteArray block;
-    QDataStream out(&block, QIODevice::WriteOnly);
-    out.setVersion(QDataStream::Qt_6_0);
-    out << quint16(0) << static_cast<quint8>(NetworkTypes::Draw_);
-    out << cmd;
-    out.device()->seek(0);
-    quint16 actualSize = static_cast<quint16>(block.size() - sizeof(quint16));
-    out << actualSize;
-    if (server_) {
-        broadcast(block, nullptr);
-    } else if (socket_ && socket_->state() == QAbstractSocket::ConnectedState) {
-    socket_->write(block);
-    socket_->flush();
-}
-}
-
-void NetworkManager::sendState(const GameState& state){
-    QByteArray block;
-    QDataStream out(&block, QIODevice::WriteOnly);
-    out.setVersion(QDataStream::Qt_6_0);
-    out << quint16(0) << static_cast<quint8>(NetworkTypes::State_);
-    out << state;
-    out.device()->seek(0);
-    quint16 actualSize = static_cast<quint16>(block.size() - sizeof(quint16));
-    out << actualSize;
-    if(!server_){
-        if(socket_ && socket_->state() == QAbstractSocket::ConnectedState) {
-            socket_->write(block);
-            socket_->flush();
-        }
-    }
-    else{
-        broadcast(block, nullptr);
-    }
-}
-
-void NetworkManager::sendMessage(const QString& text) {
-    QByteArray block;
-    QDataStream out(&block, QIODevice::WriteOnly);
-    out.setVersion(QDataStream::Qt_6_0);
-    out << quint16(0) << static_cast<quint8>(NetworkTypes::Message_);
-    out << text;
-    out.device()->seek(0);
-    quint16 actualSize = static_cast<quint16>(block.size() - sizeof(quint16));
-    out << actualSize;
-
-    if (!server_) {
-        if (socket_ && socket_->state() == QAbstractSocket::ConnectedState) {
-            socket_->write(block);
-            socket_->flush();
-        }
-    } else {
-        broadcast(block, nullptr);
-    }
-}
-
-void NetworkManager::sendNickname(const QString& nickname){
-    QByteArray block;
-    QDataStream out(&block, QIODevice::WriteOnly);
-    out.setVersion(QDataStream::Qt_6_0);
-    out << quint16(0) << static_cast<quint8>(NetworkTypes::Nickname_) << nickname;
-    out.device()->seek(0);
-    quint16 actualSize = static_cast<quint16>(block.size() - sizeof(quint16));
-    out << actualSize;
-    if (!server_) {
-        if (socket_) {
-            if (socket_->state() == QAbstractSocket::ConnectedState) {
-                socket_->write(block);
-                socket_->flush();
-            } else {
-                connect(socket_, &QTcpSocket::connected, this, [this, block]() {
-                    socket_->write(block);
-                    socket_->flush();
-                }, Qt::SingleShotConnection);
-            }
-        }
-    }
-}
-
-void NetworkManager::sendSelectedWord(const QString& word) {
-    QByteArray block;
-    QDataStream out(&block, QIODevice::WriteOnly);
-    out.setVersion(QDataStream::Qt_6_0);
-    out << quint16(0) << static_cast<quint8>(NetworkTypes::WordSelected_) << word;
-    out.device()->seek(0);
-    quint16 actualSize = static_cast<quint16>(block.size() - sizeof(quint16));
-    out << actualSize;
-
-    if (!server_) {
-        if (socket_ && socket_->state() == QAbstractSocket::ConnectedState) {
-            socket_->write(block);
-            socket_->flush();
-        }
-    }
-}
-
-QString NetworkManager::getIP(){
-    const QList<QHostAddress> ipAddressesList = QNetworkInterface::allAddresses();
-    for (const QHostAddress &address : ipAddressesList) {
-        if (address.protocol() == QAbstractSocket::IPv4Protocol && address != QHostAddress(QHostAddress::LocalHost)) {
-            return address.toString();
-        }
-    }
-    return QHostAddress(QHostAddress::LocalHost).toString(); 
-}
-
-quint16 NetworkManager::getPort(){
-    return port_;
-}
-
-void NetworkManager::setPort(quint16 port){
-    qDebug() << "netwmanager port" << port;
-    port_ = port;
-    qDebug() << "final port" << port_;
-}
-
-void NetworkManager::setMaxClients(int maxClients){
-    max_clients_ = maxClients;
 }

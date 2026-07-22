@@ -13,11 +13,11 @@ class JoinDialog : public QDialog
     Q_OBJECT
 
 public:
+    QString IP{};
+    int port{0};
     explicit JoinDialog(QWidget *parent = nullptr);
     ~JoinDialog();
     void accept() override;
-    QString IP{};
-    int port{0};
 
 signals:
     void nicknameEntered(const QString& nickname);
