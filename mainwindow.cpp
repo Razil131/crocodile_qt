@@ -57,8 +57,8 @@ void MainWindow::on_connectButton_clicked()
 
     if (j_dialog.exec() != QDialog::Accepted) return;
 
-    GameController* localController = new GameController();
-    GameWindow *g = new GameWindow(localController, this);
+    QPointer<GameController> localController = new GameController();
+    QPointer<GameWindow> g = new GameWindow(localController, this);
     g->setAttribute(Qt::WA_DeleteOnClose);
     localController->setParent(g);
 

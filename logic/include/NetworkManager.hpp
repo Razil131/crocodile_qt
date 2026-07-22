@@ -5,6 +5,7 @@
 #include <QtNetwork/QTcpSocket>
 #include <QtCore/QHash>
 #include <QtCore/QVector>
+#include <QtCore/QPointer>
 
 #include "drawCommand.hpp"
 #include "GameState.hpp"
@@ -14,8 +15,8 @@ class NetworkManager : public QObject
     Q_OBJECT
 
 private:
-    QTcpServer* server_ = nullptr;
-    QTcpSocket* socket_ = nullptr;
+    QPointer<QTcpServer> server_ = nullptr;
+    QPointer<QTcpSocket> socket_ = nullptr;
     QHash<QTcpSocket*, quint16> nextBlockSizes_;
     QHash<QTcpSocket*, QString> clientNames_;
     QHash<QTcpSocket*, int> clientIds_;

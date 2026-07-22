@@ -252,15 +252,12 @@ void NetworkManager::sendDraw(const DrawCommand& cmd){
     out.device()->seek(0);
     quint16 actualSize = static_cast<quint16>(block.size() - sizeof(quint16));
     out << actualSize;
-    if(!server_){
-        if(socket_ && socket_->state() == QAbstractSocket::ConnectedState) {
-            socket_->write(block);
-            socket_->flush();
-        }
-    }
-    else{
+    if (server_) {
         broadcast(block, nullptr);
-    }
+    } else if (socket_ && socket_->state() == QAbstractSocket::ConnectedState) {
+    socket_->write(block);
+    socket_->flush();
+}
 }
 
 void NetworkManager::sendState(const GameState& state){

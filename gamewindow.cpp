@@ -74,7 +74,7 @@ void GameWindow::setPlayer(int assignedId) {
 
     if (!isMeExplainer) {
         ui->StartGameButton->setEnabled(0);
-        ui->StartGameButton->setText("Ожидание хоста...");
+        ui->StartGameButton->setText(tr("Ожидание хоста..."));
     } else {
         if (controller->getRound() == 0) {
             ui->StartGameButton->show();
@@ -333,7 +333,7 @@ void GameWindow::onWordChooseStarted(const QString& w1, const QString& w2, const
         ui->Word3Label->show();
         ui->TimeToChooseWordLabel->show();
     } else {
-        ui->Word1Label->setText("Ведущий выбирает слово...");
+        ui->Word1Label->setText(tr("Ведущий выбирает слово..."));
         ui->Word1Label->show();
 
         ui->Word2Label->hide();
