@@ -1,4 +1,5 @@
 #pragma once
+
 #include <string>
 #include <vector>
 #include <random>
@@ -6,9 +7,11 @@
 #include <algorithm>
 #include <iostream>
 #include <ctime>
+
 #include <QtCore/QFile>
 #include <QtCore/QTextStream>
-#include <QtCore/QDebug>
+#include <QDebug>
+
 #include "exportMacro.hpp"
 #include "GameState.hpp"
 

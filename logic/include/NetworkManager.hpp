@@ -1,4 +1,5 @@
 #pragma once
+
 #include <QtCore/QObject>
 #include <QtCore/QtTypes>
 #include <QtNetwork/QTcpServer>
@@ -6,7 +7,11 @@
 #include <QtCore/QHash>
 #include <QtCore/QVector>
 #include <QtCore/QPointer>
+#include <QtNetwork/QHostAddress>
+#include <QtCore/QDataStream>
 
+#include "NetworkTypes.hpp"
+#include "GameState.hpp"
 #include "drawCommand.hpp"
 #include "GameState.hpp"
 

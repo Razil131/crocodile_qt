@@ -1,7 +1,9 @@
 #pragma once
+
 #include <QtCore/QtTypes>
-#include "drawCommand.hpp"
 #include <QDataStream>
+
+#include "drawCommand.hpp"
 
 enum class NetworkTypes : quint8{
     Message_,

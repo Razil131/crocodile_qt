@@ -4,8 +4,10 @@
 #include <ctime>
 #include <compare>
 #include <cmath>
+
 #include <QObject>
 #include <QDataStream>
+
 #include "exportMacro.hpp"
 
 class GameState;

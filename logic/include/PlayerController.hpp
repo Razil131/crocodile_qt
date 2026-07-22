@@ -1,6 +1,9 @@
 #pragma once
+
 #include <stdexcept>
+
 #include <QObject>
+
 #include "Player.hpp"
 #include "GameState.hpp"
 

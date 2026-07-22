@@ -4,9 +4,11 @@
 #include <random>
 #include <iostream>
 #include <vector>
+
 #include <QObject>
 #include <QDataStream>
 #include <QList>
+
 #include "Player.hpp"
 #include "exportMacro.hpp"
 #include "RoundManager.hpp"

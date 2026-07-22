@@ -1,5 +1,4 @@
 #include "RoundManager.hpp"
-#include <QDebug>
 
 void RoundManager::startNewRound(GameState& state){
     state.setRoundInProgress(true);

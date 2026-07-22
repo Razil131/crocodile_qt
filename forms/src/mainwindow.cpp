@@ -1,9 +1,5 @@
 #include "mainwindow.h"
-#include "./ui_mainwindow.h"
-#include "createdialog.h"
-#include "joindialog.h"
-#include "ui_joindialog.h"
-#include "gamewindow.h"
+#include "ui_mainwindow.h"
 
 MainWindow::MainWindow(QWidget *parent)
     : QMainWindow(parent)
@@ -23,8 +19,8 @@ void MainWindow::on_createButton_clicked()
 {
     CreateDialog c_dialog(this);
 
-    GameController* localController = new GameController();
-    GameWindow *g = new GameWindow(localController, this);
+    QPointer<GameController> localController = new GameController();
+    QPointer<GameWindow> g = new GameWindow(localController, this);
 
     g->setAttribute(Qt::WA_DeleteOnClose);
     localController->setParent(g);
@@ -35,11 +31,11 @@ void MainWindow::on_createButton_clicked()
     });
 
     if (c_dialog.exec() == QDialog::Accepted) {
-        localController->setMaxClients(c_dialog.maxClients);
-        localController->startNetworkServer(c_dialog.port);
+        localController->setMaxClients(c_dialog.getMaxClients());
+        localController->startNetworkServer(c_dialog.getPort());
         g->show();
         g->setHostMode(true);
-        localController->setPort(c_dialog.port);
+        localController->setPort(c_dialog.getPort());
         g->updateIPlabel();
     }
     else {

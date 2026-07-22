@@ -1,6 +1,5 @@
 #include "paintwidget.h"
 #include "ui_paintwidget.h"
-#include <QStack>
 
 PaintWidget::PaintWidget(QWidget *parent)
     : QWidget(parent)

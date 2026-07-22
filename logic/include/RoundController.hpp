@@ -1,10 +1,10 @@
 #pragma once
 
-#include <QObject>
-#include <QTimer>
 #include <vector>
 #include <string>
-#include <QDebug>
+
+#include <QObject>
+#include <QTimer>
 
 #include "WordManager.hpp"
 #include "RoundManager.hpp"

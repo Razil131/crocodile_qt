@@ -1,5 +1,4 @@
 #include "GameController.hpp"
-#include <QDebug>
 
 GameController::GameController(){
     chatController_   = new ChatController(state_, wordmanager_);
@@ -195,10 +194,8 @@ void GameController::connectToNetworkServer(const QString& ip, quint16 port, con
 }
 
 void GameController::sendChatMessage(const QString& text) {
-    if (isServer_) {
-        if (!state_.players().isEmpty()) {
-            chatController_->sendMessage(state_.mutablePlayers().first(), text);
-        }
+    if (isServer_ and !state_.players().isEmpty()) {
+        chatController_->sendMessage(state_.mutablePlayers().first(), text);
     } else {
         networkManager_->sendMessage(text);
     }
@@ -216,10 +213,8 @@ void GameController::sendCurrentGameState() {
 }
 
 void GameController::processNetworkChatMessage(int senderId, const QString& text) {
-    if (isServer_) {
-        Player& player = playerController_->getPlayerById(senderId);
-        chatController_->sendMessage(player, text); 
-    }
+    Player& player = playerController_->getPlayerById(senderId);
+    chatController_->sendMessage(player, text); 
 }
 
 void GameController::processNetworkWordSelection(int senderId, const QString& word) {

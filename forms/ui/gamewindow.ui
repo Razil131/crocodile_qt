@@ -102,6 +102,7 @@ border: none;</string>
      </property>
      <property name="font">
       <font>
+       <family>Segoe UI</family>
        <pointsize>48</pointsize>
        <bold>true</bold>
       </font>
@@ -128,6 +129,7 @@ color: #4f46e5;</string>
      </property>
      <property name="font">
       <font>
+       <family>Segoe UI</family>
        <pointsize>16</pointsize>
        <bold>true</bold>
       </font>
@@ -160,6 +162,7 @@ QPushButton:hover {
      </property>
      <property name="font">
       <font>
+       <family>Segoe UI</family>
        <pointsize>16</pointsize>
        <bold>true</bold>
       </font>
@@ -192,6 +195,7 @@ QPushButton:hover {
      </property>
      <property name="font">
       <font>
+       <family>Segoe UI</family>
        <pointsize>16</pointsize>
        <bold>true</bold>
       </font>
@@ -224,6 +228,7 @@ QPushButton:hover {
      </property>
      <property name="font">
       <font>
+       <family>Segoe UI</family>
        <pointsize>36</pointsize>
        <bold>true</bold>
       </font>
@@ -285,6 +290,7 @@ QListWidget::item {
     </property>
     <property name="font">
      <font>
+      <family>Segoe UI</family>
       <pointsize>11</pointsize>
      </font>
     </property>
@@ -315,7 +321,7 @@ QLineEdit:focus {
     </property>
     <property name="font">
      <font>
-      <family>Arial</family>
+      <family>Segoe UI</family>
       <pointsize>16</pointsize>
      </font>
     </property>
@@ -362,6 +368,7 @@ QPushButton:hover {
      </property>
      <property name="font">
       <font>
+       <family>Segoe UI</family>
        <pointsize>12</pointsize>
        <bold>true</bold>
       </font>
@@ -387,6 +394,7 @@ QPushButton:hover {
      </property>
      <property name="font">
       <font>
+       <family>Segoe UI</family>
        <pointsize>28</pointsize>
        <bold>true</bold>
       </font>
@@ -404,8 +412,8 @@ QPushButton:hover {
     <widget class="QProgressBar" name="TimeLeftBar">
      <property name="geometry">
       <rect>
-       <x>500</x>
-       <y>22</y>
+       <x>470</x>
+       <y>20</y>
        <width>400</width>
        <height>14</height>
       </rect>
@@ -432,14 +440,15 @@ QProgressBar::chunk {
     <widget class="QLabel" name="WordLabel">
      <property name="geometry">
       <rect>
-       <x>500</x>
+       <x>409</x>
        <y>45</y>
-       <width>400</width>
+       <width>511</width>
        <height>45</height>
       </rect>
      </property>
      <property name="font">
       <font>
+       <family>Segoe UI</family>
        <pointsize>26</pointsize>
        <bold>true</bold>
       </font>
@@ -465,6 +474,7 @@ QProgressBar::chunk {
      </property>
      <property name="font">
       <font>
+       <family>Segoe UI</family>
        <pointsize>14</pointsize>
       </font>
      </property>
@@ -491,6 +501,7 @@ border: 2px solid #e5e7eb;</string>
      </property>
      <property name="font">
       <font>
+       <family>Segoe UI</family>
        <pointsize>14</pointsize>
       </font>
      </property>
@@ -526,6 +537,7 @@ QPushButton:checked {
      </property>
      <property name="font">
       <font>
+       <family>Segoe UI</family>
        <pointsize>14</pointsize>
       </font>
      </property>
@@ -561,6 +573,7 @@ QPushButton:checked {
      </property>
      <property name="font">
       <font>
+       <family>Segoe UI</family>
        <pointsize>9</pointsize>
        <bold>true</bold>
       </font>
@@ -620,6 +633,7 @@ QSlider::handle:horizontal {
      </property>
      <property name="font">
       <font>
+       <family>Segoe UI</family>
        <bold>true</bold>
       </font>
      </property>
@@ -644,6 +658,7 @@ QSlider::handle:horizontal {
      </property>
      <property name="font">
       <font>
+       <family>Segoe UI</family>
        <pointsize>10</pointsize>
        <bold>true</bold>
       </font>
@@ -672,7 +687,7 @@ QSlider::handle:horizontal {
      <x>0</x>
      <y>0</y>
      <width>1440</width>
-     <height>22</height>
+     <height>21</height>
     </rect>
    </property>
   </widget>

@@ -1,16 +1,26 @@
 #include "WordManager.hpp"
 
-
 QString WordManager::chooseRandomWord(){
-    QList<std::string> words = getWordsFromFile(":/assets/russian.utf-8");
-        if (words.empty()) return "крокодил";
+    QList<std::string> rawWords = getWordsFromFile(":/assets/russian.utf-8");
+    QList<QString> validWords;
+
+    for (const auto& word : rawWords) {
+        QString qWord = QString::fromStdString(word);
+        int charCount = qWord.length();
+        
+        if (charCount >= 4 && charCount <= 12) {
+            validWords.append(qWord);
+        }
+    }
+    if (validWords.empty()) return "крокодил";
+
     std::random_device rd;
     std::mt19937 gen(rd());
-    std::uniform_int_distribution<> dis(0, words.size() - 1);
+    std::uniform_int_distribution<> dis(0, validWords.size() - 1);
 
     int randomIndex = dis(gen);
-    return QString::fromStdString(words[randomIndex]);
- }
+    return validWords[randomIndex];
+}
 
 QList<std::string> WordManager::getWordsFromFile(const QString& fileName){
     QList<std::string> words;

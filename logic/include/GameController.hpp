@@ -1,11 +1,13 @@
 #pragma once
-#include <QObject>
+
 #include <memory>
+
+#include <QObject>
+
 #include "exportMacro.hpp"
 #include "GameState.hpp"
 #include "WordManager.hpp"
 #include "RoundManager.hpp"
-
 #include "ChatController.hpp"
 #include "DrawController.hpp"
 #include "PlayerController.hpp"

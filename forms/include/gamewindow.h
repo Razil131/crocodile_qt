@@ -5,6 +5,8 @@
 #include <QTimer>
 #include <QPainter>
 #include <QStyle>
+#include <QColorDialog>
+#include <QMessageBox>
 
 #include "paintwidget.h"
 #include "GameController.hpp"

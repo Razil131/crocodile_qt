@@ -1,5 +1,7 @@
 #pragma once
+
 #include <QObject>
+
 #include "drawCommand.hpp"
 #include "exportMacro.hpp"
 

@@ -12,16 +12,19 @@ class CreateDialog : public QDialog
 {
     Q_OBJECT
 
-public:
-    int port;
-    int maxClients;
-    
+public: 
     explicit CreateDialog(QWidget *parent = nullptr);
     ~CreateDialog();
     void accept() override;
+    void setPort(const int port){port_=port;}
+    int getPort(){return port_;}
+    void setMaxClients(const int maxClients){maxClients_=maxClients;}
+    int getMaxClients(){return maxClients_;}
 
 private:
     Ui::CreateDialog *ui;
+    int port_;
+    int maxClients_;
 
 signals:
     void nicknameEntered(const QString& nickname);

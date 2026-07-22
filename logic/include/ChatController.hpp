@@ -1,6 +1,7 @@
 #pragma once
 
 #include <QObject>
+
 #include "Player.hpp"
 #include "ChatManager.hpp"
 #include "GameState.hpp"

@@ -1,8 +1,6 @@
 #include "gamewindow.h"
 #include "ui_gamewindow.h"
-#include <QColorDialog>
-#include <QDebug>
-#include <QMessageBox>
+
 
 GameWindow::GameWindow(GameController* ctrl, QWidget *parent)
     : QMainWindow(parent)
@@ -73,12 +71,10 @@ void GameWindow::setPlayer(int assignedId) {
     if (!isMeExplainer) {
         ui->StartGameButton->setEnabled(0);
         ui->StartGameButton->setText(tr("Ожидание хоста..."));
+    } else if(controller->getRound() == 0) {
+         ui->StartGameButton->show();
     } else {
-        if (controller->getRound() == 0) {
-            ui->StartGameButton->show();
-        } else {
-            ui->StartGameButton->hide();
-        }
+        ui->StartGameButton->hide();
     }
 
     playersTableUpdate();

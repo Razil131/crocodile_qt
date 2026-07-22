@@ -8,6 +8,8 @@
 #include <QList>
 #include <QPoint>
 #include <QColor>
+#include <QStack>
+
 #include "drawCommand.hpp"
 
 namespace Ui {

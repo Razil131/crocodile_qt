@@ -1,11 +1,7 @@
-#include "NetworkManager.hpp"
-#include "NetworkTypes.hpp"
-#include "GameState.hpp"
-#include "GameController.hpp"
-#include <QtNetwork/QHostAddress>
-#include <QtCore/QDebug>
-#include <QtCore/QDataStream>
 #include <QNetworkInterface>
+
+#include "NetworkManager.hpp"
+#include "GameController.hpp"
 
 void NetworkManager::startServer(quint16 port, const QString& hostNickname) {
     hostNickname_ = hostNickname;
@@ -298,7 +294,7 @@ void NetworkManager::onReadyRead() {
                     in >> text;
                     int senderId = clientIds_.value(clientSocket, -1);
 
-                    if (gameController) {
+                    if (gameController ) {
                         gameController->processNetworkChatMessage(senderId, text);
                     }
                 } else {
