@@ -9,7 +9,9 @@ bool ChatManager::addMessage(Player& ply, const QString& message, GameState& gam
 }
 
 bool ChatManager::tryGuess(Player& ply, GameState& gameState, WordManager& wordManager, const QString& word){
-    if (ply.id() == gameState.explainerID()) return false;
+    if (ply.id() == gameState.explainerID()) {
+        return false;
+    }
     bool isCorrect = wordManager.isWordCorrect(gameState,word);
     if (isCorrect){
         ply.addOneToGuessedCount();

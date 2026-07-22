@@ -5,6 +5,7 @@
 #include <QTimer>
 #include <QPainter>
 #include <QStyle>
+
 #include "paintwidget.h"
 #include "GameController.hpp"
 #include "Player.hpp"
@@ -18,22 +19,24 @@ class GameWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    explicit GameWindow(GameController* ctrl, QWidget *parent = nullptr);
-    ~GameWindow();
-
     enum class MsgType {
         Info,
         Success,
         Warning
     };
 
-    QTimer *pressTimer;
-    int duration = 0;
+    explicit GameWindow(GameController* ctrl, QWidget *parent = nullptr);
+    ~GameWindow();
 
-    void setPlayer(int assignedId); // теперь передаем просто назначенный ID
+    void setPlayer(int assignedId);
     int getPlayerID() const { return playerId_; }
     void setHostMode(bool isHost);
     void updateIPlabel();
+
+protected:
+    bool eventFilter(QObject *obj, QEvent *event) override;
+    void closeEvent(QCloseEvent *event) override;
+    void keyPressEvent(QKeyEvent *event) override;
 
 private slots:
     void on_StartGameButton_clicked();
@@ -48,7 +51,6 @@ private slots:
     void on_EnterChat_released();
 
     void chatUpdate();
-
     void onWordChooseStarted(const QString& w1, const QString& w2, const QString& w3);
     void onRoundStarted(int roundNum, const QString& wordToDraw);
     void onOpenedLettersUpdated(const QList<QString>& openedLetters);
@@ -60,7 +62,6 @@ private slots:
     void onGameEnded();
 
 private:
-    Ui::GameWindow *ui;
     QString getWordLabelStr(const QList<QString>& letters);
     void showRound();
     void playersTableUpdate();
@@ -68,13 +69,12 @@ private:
     void tableInChat();
     void addSystemMessage(const QString& text, MsgType type = MsgType::Info);
 
+    Ui::GameWindow *ui;
     GameController* controller;
-    int playerId_ = -1;
 
-protected:
-    bool eventFilter(QObject *obj, QEvent *event) override;
-    void closeEvent(QCloseEvent *event) override;
-    void keyPressEvent(QKeyEvent *event) override;
+    QTimer *pressTimer;
+    int duration = 0;
+    int playerId_ = -1;
 };
 
 #endif // GAMEWINDOW_H

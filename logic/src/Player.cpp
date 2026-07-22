@@ -2,7 +2,8 @@
 #include "GameState.hpp"
 #include "WordManager.hpp"
 
-Player::Player(int id, const QString& name): id_(id)
+Player::Player(int id, const QString& name)
+    : id_(id)
     , name_(name)
     , score_(0)
     , guessedCount_(0)

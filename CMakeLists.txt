@@ -20,12 +20,30 @@ add_subdirectory(logic)
 include_directories(${CMAKE_CURRENT_SOURCE_DIR})
 set(PROJECT_SOURCES
         main.cpp
-        mainwindow.h mainwindow.cpp mainwindow.ui
-        joindialog.h joindialog.cpp joindialog.ui
-        gamewindow.h gamewindow.cpp gamewindow.ui
-        createdialog.h createdialog.cpp createdialog.ui
-        paintwidget.h paintwidget.cpp paintwidget.ui
-        resources.qrc)
+        forms/src/mainwindow.cpp
+        forms/src/joindialog.cpp
+        forms/src/gamewindow.cpp
+        forms/src/createdialog.cpp
+        forms/src/paintwidget.cpp
+        resources.qrc
+)
+
+set(PROJECT_HEADERS
+        forms/include/mainwindow.h
+        forms/include/joindialog.h
+        forms/include/gamewindow.h
+        forms/include/createdialog.h
+        forms/include/paintwidget.h
+)
+
+set(PROJECT_FORMS
+        forms/ui/mainwindow.ui
+        forms/ui/joindialog.ui
+        forms/ui/gamewindow.ui
+        forms/ui/createdialog.ui
+        forms/ui/paintwidget.ui
+)
+
 
 if(WIN32)
     set(app_icon_resource "${CMAKE_CURRENT_SOURCE_DIR}/app.rc")
@@ -35,15 +53,27 @@ if(${QT_VERSION_MAJOR} GREATER_EQUAL 6)
     qt_add_executable(Crocodile
         MANUAL_FINALIZATION
         ${PROJECT_SOURCES}
+        ${PROJECT_HEADERS}
+        ${PROJECT_FORMS}
         ${app_icon_resource}
     )
 else()
     if(ANDROID)
-        add_library(Crocodile SHARED ${PROJECT_SOURCES})
+        add_library(Crocodile SHARED 
+        ${PROJECT_SOURCES} 
+        ${PROJECT_FORMS}
+        ${PROJECT_HEADERS})
     else()
         add_executable(Crocodile ${PROJECT_SOURCES})
     endif()
 endif()
+
+set_target_properties(Crocodile PROPERTIES
+    AUTOUIC_SEARCH_PATHS "${CMAKE_CURRENT_SOURCE_DIR}/forms/ui"
+)
+target_include_directories(Crocodile PRIVATE 
+    ${CMAKE_CURRENT_SOURCE_DIR}/forms/include
+)
 
 target_link_libraries(Crocodile PRIVATE
     Qt${QT_VERSION_MAJOR}::Widgets

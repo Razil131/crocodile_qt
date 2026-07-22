@@ -34,7 +34,7 @@ Player& PlayerController::createAndAddPlayer(const QString& name){
 
 bool PlayerController::areAllGuessed(){
     for (const Player& ply : state_.players()){
-        if (!ply.isCurrentWordGuessed() and !isExplainer(ply)){
+        if (!ply.isCurrentWordGuessed() && !isExplainer(ply)){
             return false;
         }
     }

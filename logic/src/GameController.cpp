@@ -34,7 +34,7 @@ GameController::GameController(){
         if (words.size() == 3) {
             emit wordsForChooseReady(words[0], words[1], words[2]);
         }
-    } else if (isGameEnding) {           // <-- добавить
+    } else if (isGameEnding) {
         emit gameEnded();
     } else if (isNewRound) {
         emit roundStarted(state_.RoundNum(), state_.currentWord());
@@ -136,7 +136,7 @@ QList<QString> GameController::getOpenedLetters() {
 QString GameController::getIPandPort() {
     QString ip = networkManager_->getIP();
     quint16 port = getPort();
-    QString result ="IP " + ip + ":" + QString::number(port);
+    QString result = "IP " + ip + ":" + QString::number(port);
     qDebug() << port;
     return result;
 }

@@ -16,6 +16,7 @@ public:
     explicit CreateDialog(QWidget *parent = nullptr);
     ~CreateDialog();
     void accept() override;
+    
     int port;
     int maxClients;
 

@@ -1,27 +1,15 @@
 #include "RoundController.hpp"
 
-RoundController::RoundController(
-    GameState& state,
-    WordManager& wordManager,
-    RoundManager& roundManager): state_(state),
-    wordManager_(wordManager),
-    roundManager_(roundManager){
+RoundController::RoundController(GameState& state, WordManager& wordManager, RoundManager& roundManager)
+    : state_(state)
+    , wordManager_(wordManager)
+    , roundManager_(roundManager){
     gameTimer_ = new QTimer(this);
     wordTimer_ = new QTimer(this);
 
-    connect(
-        gameTimer_,
-        &QTimer::timeout,
-        this,
-        &RoundController::onGameTick
-    );
+    connect(gameTimer_, &QTimer::timeout, this, &RoundController::onGameTick);
 
-    connect(
-        wordTimer_,
-        &QTimer::timeout,
-        this,
-        &RoundController::onWordTimerTick
-    );
+    connect(wordTimer_, &QTimer::timeout, this, &RoundController::onWordTimerTick);
 }
 
 
