@@ -16,7 +16,7 @@ void ChatController::sendMessage(Player& ply, const QString& message){
     if (isCorrect) {
         std::time_t timeLeft = state_.roundEndTime() - std::time(nullptr);
         int bonus = ply.calculateScoreForGuess(timeLeft, state_.ROUND_TIME);
-        emit messageReceived(-1, "Система", QString(tr("Игрок %1 угадал слово!")).arg(ply.name()));
+        emit messageReceived(-1, tr("Система"), QString(tr("Игрок %1 угадал слово!")).arg(ply.name()));
         emit openedLettersMayHaveChanged();
         emit playersUpdated();
         emit playerGuessedWord(ply.id(), bonus);

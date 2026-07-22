@@ -6,7 +6,7 @@ JoinDialog::JoinDialog(QWidget *parent)
     , ui(new Ui::JoinDialog)
 {
     ui->setupUi(this);
-    setWindowTitle("Крокодил - Присоединиться к лобби");
+    setWindowTitle(tr("Крокодил - Присоединиться к лобби"));
 }
 
 JoinDialog::~JoinDialog()
@@ -19,7 +19,7 @@ void JoinDialog::accept()
     QString nickname = ui->NickInput->text().trimmed();
 
     if (nickname.isEmpty()) {
-        ui->NickInput->setPlaceholderText("Ник не может быть пустым!");
+        ui->NickInput->setPlaceholderText(tr("Ник не может быть пустым!"));
         return;
     }
 

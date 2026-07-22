@@ -16,7 +16,6 @@ GameController::GameController(){
     connect(chatController_, &ChatController::playersUpdated, this, &GameController::playersUpdated);
     
     connect(networkManager_, &NetworkManager::gameStateReceivedFromNetwork, this, [this](const GameState& newState) {
-        qDebug() << "Client received state, wordChooseTimeLeft:" << newState.wordChooseTimeLeft();
         bool isNewRound = (this->state_.RoundNum() != newState.RoundNum());
         bool isChoosing = newState.isChoosingWord();
         bool isGameEnding = (!this->state_.isGameEnded() && newState.isGameEnded());
@@ -75,7 +74,6 @@ QString GameController::getIPandPort() {
     QString ip = networkManager_->getIP();
     quint16 port = getPort();
     QString result = "IP " + ip + ":" + QString::number(port);
-    qDebug() << port;
     return result;
 }
 
@@ -172,7 +170,6 @@ void GameController::setupServerLogic() {
     connect(roundController_, &RoundController::gameEnded, this, &GameController::gameEnded);
 
     connect(roundController_, &RoundController::wordTimerUpdated, this, [this](std::time_t timeLeft) {
-        qDebug() << "Timer tick:" << timeLeft;
         emit wordTimerUpdated(timeLeft);
         sendCurrentGameState();
     });
@@ -229,8 +226,6 @@ void GameController::processNetworkWordSelection(int senderId, const QString& wo
     if (isServer_) {
         if (senderId == state_.explainerID()) {
             roundController_->setWord(word);
-        } else {
-            qDebug() << "error word selection";
         }
     }
 }

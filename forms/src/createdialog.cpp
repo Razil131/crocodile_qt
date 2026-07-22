@@ -6,7 +6,7 @@ CreateDialog::CreateDialog(QWidget *parent)
     , ui(new Ui::CreateDialog)
 {
     ui->setupUi(this);
-    setWindowTitle("Крокодил - Создать лобби");
+    setWindowTitle(tr("Крокодил - Создать лобби"));
 }
 
 CreateDialog::~CreateDialog()
@@ -19,7 +19,7 @@ void CreateDialog::accept()
     QString nickname = ui->NickInput->text().trimmed();
 
     if (nickname.isEmpty()) {
-        ui->NickInput->setPlaceholderText("Ник не может быть пустым!");
+        ui->NickInput->setPlaceholderText(tr("Ник не может быть пустым!"));
         return;
     }
 

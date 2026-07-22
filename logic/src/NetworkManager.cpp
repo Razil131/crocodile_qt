@@ -12,7 +12,6 @@ void NetworkManager::startServer(quint16 port, const QString& hostNickname) {
     server_ = new QTcpServer(this);
 
     if (!server_->listen(QHostAddress::Any, port)) {
-        qDebug() << "Ошибка запуска сервера:" << server_->errorString();
         return;
     }
 
@@ -34,7 +33,6 @@ void NetworkManager::connectToServer(QString ip_adress, quint16 port) {
 
     connect(socket_, &QTcpSocket::connected, this, &NetworkManager::connectionEstablished);
     connect(socket_, &QTcpSocket::errorOccurred, this, [this](QAbstractSocket::SocketError error) {
-        qDebug() << "Ошибка сокета клиента:" << error;
         if (error == QAbstractSocket::RemoteHostClosedError) {
             emit serverDisconnected();
         } else {
@@ -201,9 +199,7 @@ quint16 NetworkManager::getPort(){
 }
 
 void NetworkManager::setPort(quint16 port){
-    qDebug() << "netwmanager port" << port;
     port_ = port;
-    qDebug() << "final port" << port_;
 }
 
 void NetworkManager::setMaxClients(int maxClients){
@@ -217,7 +213,7 @@ void NetworkManager::newConnection(){
             QByteArray block;
             QDataStream out(&block, QIODevice::WriteOnly);
             out.setVersion(QDataStream::Qt_6_0);
-            out << quint16(0) << static_cast<quint8>(NetworkTypes::ConnectionRejected_) << QString("Сервер переполнен");
+            out << quint16(0) << static_cast<quint8>(NetworkTypes::ConnectionRejected_) << QString(tr("Сервер переполнен"));
             out.device()->seek(0);
             out << static_cast<quint16>(block.size() - sizeof(quint16));
             clientSocket->write(block);

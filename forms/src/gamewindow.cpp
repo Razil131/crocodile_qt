@@ -10,7 +10,7 @@ GameWindow::GameWindow(GameController* ctrl, QWidget *parent)
     , controller(ctrl)
 {
     ui->setupUi(this);
-    setWindowTitle("Крокодил");
+    setWindowTitle(tr("Крокодил"));
 
     connect(ui->InputChat, &QLineEdit::returnPressed, this, &GameWindow::on_EnterChat_released);
 
@@ -29,7 +29,7 @@ GameWindow::GameWindow(GameController* ctrl, QWidget *parent)
     connect(ui->Canvas, &PaintWidget::commandGenerated, controller, &GameController::sendDrawCommand);
     connect(controller, &GameController::drawCommandReceived, ui->Canvas, &PaintWidget::executeCommand);
     connect(controller, &GameController::serverDisconnected, this, [this]() {
-        QMessageBox::critical(this, "ERROR", "Потеряно соединение с сервером");
+        QMessageBox::critical(this, "ERROR", tr("Потеряно соединение с сервером"));
         this->close();
     });
     
@@ -136,7 +136,7 @@ void GameWindow::on_StartGameButton_clicked()
             ui->StartGameButton->hide();
             controller->startGame();
         } else {
-            QListWidgetItem* item = new QListWidgetItem("Система: Недостаточно игроков для начала игры (минимум 2).");
+            QListWidgetItem* item = new QListWidgetItem(tr("Система: Недостаточно игроков для начала игры (минимум 2)."));
             item->setForeground(QColor("#dc2626"));
             item->setBackground(QColor("#fee2e2"));
             
@@ -180,7 +180,7 @@ void GameWindow::on_BrushSizeSlider_valueChanged(int value)
 void GameWindow::on_ChooseColorButton_clicked()
 {
     if (controller->players()->isExplainerByID(playerId_)) {
-        QColor selectedColor = QColorDialog::getColor(Qt::black, this, "Выберите цвет");
+        QColor selectedColor = QColorDialog::getColor(Qt::black, this, tr("Выберите цвет"));
         if (selectedColor.isValid()) {
             ui->Canvas->setColor(selectedColor);
             QString colorStyle = QString(
@@ -320,7 +320,7 @@ void GameWindow::onRoundEnded() {
     ui->BrushSizeSlider->setEnabled(false);
     ui->Canvas->clearAll();
     ui->Canvas->clearHistory();
-    addSystemMessage("Система: Раунд окончен! Подсчет очков...", MsgType::Info);
+    addSystemMessage(tr("Система: Раунд окончен! Подсчет очков..."), MsgType::Info);
     playersTableUpdate();
 }
 
@@ -336,7 +336,7 @@ void GameWindow::onExplainerUpdated(int newExplainerId) {
 }
 
 void GameWindow::onMessageReceived(int senderId, const QString& senderName, const QString& text) {
-    if (senderId == -1 || senderName == "Система") {
+    if (senderId == -1 || senderName == tr("Система")) {
         MsgType type = MsgType::Success;     
         addSystemMessage(QString("%1: %2").arg(senderName, text), type);      
     } else {
@@ -347,7 +347,6 @@ void GameWindow::onMessageReceived(int senderId, const QString& senderName, cons
 
 void GameWindow::onGameEnded(){
     tableInChat();
-    qDebug() << "onGameEnded вызван!";
     playersTableUpdate();
     ui->StartGameButton->show();
 }
@@ -367,7 +366,7 @@ QString GameWindow::getWordLabelStr(const QList<QString>& letters) {
 }
 
 void GameWindow::showRound() {
-    QString round = QString("Раунд %1/%2").arg(QString::number(controller->getRound()), QString::number(controller->getRoundCount()));
+    QString round = QString(tr("Раунд %1/%2")).arg(QString::number(controller->getRound()), QString::number(controller->getRoundCount()));
     ui->RoundNumLabel->setText(round);
 }
 
@@ -384,7 +383,7 @@ void GameWindow::playersTableUpdate() {
 
         QTableWidgetItem* nameItem = new QTableWidgetItem(player.name());
         
-        QString status = isExplainer ? "Рисующий" : "Игрок";
+        QString status = isExplainer ? tr("Рисующий") : tr("Игрок");
         QTableWidgetItem* statusItem = new QTableWidgetItem(status);
         
         QTableWidgetItem* scoreItem = new QTableWidgetItem(QString::number(player.score()));
@@ -443,7 +442,7 @@ void GameWindow::tableCreate() {
 void GameWindow::tableInChat(){
     const QList<Player>& players = controller->getPlayers();
     for (const auto& player : players) {
-        QString output = QString("Система: Игрок %1 заработал: %2 очков!")
+        QString output = QString(tr("Система: Игрок %1 заработал: %2 очков!"))
                          .arg(player.name(), QString::number(player.score()));
         
         addSystemMessage(output, MsgType::Success);

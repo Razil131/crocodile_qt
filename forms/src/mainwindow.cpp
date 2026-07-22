@@ -10,7 +10,7 @@ MainWindow::MainWindow(QWidget *parent)
     , ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
-    setWindowTitle("Крокодил");
+    setWindowTitle(tr("Крокодил"));
     setWindowIcon(QIcon(":/assets/icon.png"));
 }
 
