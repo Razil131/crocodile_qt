@@ -52,11 +52,22 @@ jobs:
         run: |
           ctest --test-dir build -C Release --output-on-failure
 
+      - name: Set Version
+        shell: bash
+        run: |
+          OFFSET=48
+          PATCH=$(( ${{ github.run_number }} - OFFSET ))
+          
+          if [ $PATCH -lt 0 ]; then PATCH=0; fi
+          
+          VERSION="v1.0.${PATCH}"
+          echo "VERSION=$VERSION" >> $GITHUB_ENV
+
       - name: pack win
         if: matrix.os == 'windows-latest'
         shell: bash
         run: |
-          FOLDER_NAME="${{ matrix.out }}-v0.0.${{ github.run_number }}"
+          FOLDER_NAME="${{ matrix.out }}-${{ env.VERSION }}"
           mkdir -p packed/$FOLDER_NAME
           
           cp build/Release/Crocodile.exe packed/$FOLDER_NAME/
@@ -84,7 +95,7 @@ jobs:
       - name: pack linux
         if: matrix.os == 'ubuntu-24.04'
         run: |
-          FOLDER_NAME="${{ matrix.out }}-v0.0.${{ github.run_number }}"
+          FOLDER_NAME="${{ matrix.out }}-${{ env.VERSION }}"
           cqtdeployer -bin dist/Crocodile -libDir dist -targetDir packed/$FOLDER_NAME
           rm -rf dist
           tar -czf $FOLDER_NAME.tar.gz -C packed $FOLDER_NAME
@@ -92,18 +103,18 @@ jobs:
       - name: upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ matrix.out }}-v0.0.${{ github.run_number }}
+          name: ${{ matrix.out }}-${{ env.VERSION }}
           path: packed/
 
       - name: upload to github release
         if: github.event_name == 'push'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: "v0.0.${{ github.run_number }}"
-          name: "Automatic build #${{ github.run_number }}"
+          tag_name: "${{ env.VERSION }}"
+          name: "Release ${{ env.VERSION }}"
           body: |
-            Автоматический релиз для коммита ${{ github.sha }}
+            Автоматический релиз ${{ env.VERSION }} для коммита ${{ github.sha }}
             Ветка: ${{ github.ref_name }}
           draft: false
           prerelease: false
-          files: "${{ matrix.out }}-v0.0.${{ github.run_number }}.${{ matrix.ext }}"
+          files: "${{ matrix.out }}-${{ env.VERSION }}.${{ matrix.ext }}"
